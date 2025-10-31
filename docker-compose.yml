@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    container_name: amartha-webapp
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - db-step1
+      - db-step2
+
+  db-step1:
+    image: node:20-alpine
+    container_name: amartha-db-step1
+    working_dir: /app
+    ports:
+      - "4001:4001"
+    volumes:
+      - ./db_step1.json:/app/db.json
+    command: sh -c "npm install -g json-server@0.17.4 && json-server --host 0.0.0.0 --port 4001 --watch db.json"
+
+  db-step2:
+    image: node:20-alpine
+    container_name: amartha-db-step2
+    working_dir: /app
+    ports:
+      - "4002:4002"
+    volumes:
+      - ./db_step2.json:/app/db.json
+    command: sh -c "npm install -g json-server@0.17.4 && json-server --host 0.0.0.0 --port 4002 --watch db.json"
