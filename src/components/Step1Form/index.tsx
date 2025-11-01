@@ -6,7 +6,7 @@ import { useCallback } from "react";
 import { Role } from "@/constants/role";
 import type { Department } from "./use-departments";
 import { LinkButton } from "../LinkButton";
-import { useForm } from "../../hooks/use-form";
+import { useForm, type ValidationSchema } from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
 import { useBasicInfo } from "./use-basic-info";
 
@@ -37,6 +37,31 @@ const ROLE_OPTIONS: { children: string; value?: Role }[] = [
 
 const LS_ADMIN_FORM_KEY = DRAFT_KEYS.admin;
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
+  fullName: {
+    required: true,
+    validate: (value) => !!value?.trim(),
+  },
+  email: {
+    required: true,
+    validate: (value) => !!value?.trim() && EMAIL_REGEX.test(value),
+  },
+  department: {
+    required: true,
+    validate: (value) => !!value && value.id !== 0,
+  },
+  employeeId: {
+    required: true,
+    validate: (value) => !!value?.trim(),
+  },
+  role: {
+    required: true,
+    validate: (value) => !!value,
+  },
+};
+
 export const Step1Form = () => {
   const lsValues = localStorage.getItem(LS_ADMIN_FORM_KEY);
   const currentDraftAdmin = !!lsValues ? JSON.parse(lsValues) : null;
@@ -49,9 +74,11 @@ export const Step1Form = () => {
     handleBlur,
     validateAndTouch,
     isFormValid,
+    isLocalStorageInSync,
+    isSyncing,
     handleChangeFormData,
     handleClearDraft,
-  } = useForm(currentDraftAdmin, LS_ADMIN_FORM_KEY);
+  } = useForm(currentDraftAdmin, LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA);
   const { data: basicInfo } = useBasicInfo();
 
   const handleDepartmentSelect = (option: Department | null) => {
@@ -131,7 +158,7 @@ export const Step1Form = () => {
         <Select
           name="role"
           options={ROLE_OPTIONS}
-          value={formData?.role}
+          value={formData?.role || ""}
           onChange={handleRoleChange}
           onBlur={() => handleBlur("role")}
         />
@@ -141,10 +168,11 @@ export const Step1Form = () => {
       </div>
       <div className="w-full">
         <Input
+          key={formData?.employeeId || "empty"}
           name="employeeId"
           disabled
           type="text"
-          value={formData?.employeeId}
+          value={formData?.employeeId || ""}
         />
         {touched.employeeId && errors.employeeId && (
           <p className="text-red-600 text-xs mt-1 ml-1">{errors.employeeId}</p>
@@ -159,7 +187,8 @@ export const Step1Form = () => {
           Clear Draft
         </Button>
         <LinkButton
-          disabled={!isFormValid()}
+          disabled={!isFormValid() || !isLocalStorageInSync()}
+          loading={isSyncing()}
           to="/wizard"
           search={{ role: "ops" }}
         >

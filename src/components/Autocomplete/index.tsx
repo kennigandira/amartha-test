@@ -53,6 +53,9 @@ export const Autocomplete = ({
 
   useEffect(() => {
     setInputValue(value);
+    if (!value) {
+      setSelectedOption(null);
+    }
   }, [value]);
 
   useEffect(() => {
