@@ -15,3 +15,7 @@ export function generateOptions(options: GenerateOptionsProps[]) {
     return { value: item.id, children: item.name };
   });
 }
+
+export function isEmptyObject(obj: any) {
+  return Object.keys(obj).length === 0;
+}

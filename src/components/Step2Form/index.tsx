@@ -1,11 +1,19 @@
 import { Button, ButtonVariant } from "../Button";
-import { Input } from "../Input";
 import { Select } from "../Select";
 import { TextArea } from "../TextArea";
 import { FileInput } from "../FileInput";
-import { useState, useCallback, useRef } from "react";
-import { useSearch } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { LinkButton } from "../LinkButton";
+import { Autocomplete } from "../Autocomplete";
+import { useForm, type ValidationSchema } from "@/hooks/use-form";
+import { DRAFT_KEYS } from "@/constants/draft";
+
+export interface OfficeLocation {
+  id: number;
+  name: string;
+}
+
+const LOCATIONS_ENDPOINT = `${import.meta.env.VITE_DETAILS_SERVICE_PORT}/locations`;
 
 export const EmploymentType = {
   FULL_TIME: "full-time",
@@ -14,10 +22,12 @@ export const EmploymentType = {
   INTERN: "intern",
 } as const;
 
-interface Details {
+export interface Details {
+  employeeId?: string;
   employmentType: EmploymentType;
-  officeLocation: string;
+  officeLocation: OfficeLocation;
   notes: string;
+  photo: string;
 }
 
 export type EmploymentType =
@@ -42,34 +52,41 @@ const EMPLOYMENT_TYPE_OPTIONS: { children: string; value: EmploymentType }[] = [
   },
 ];
 
-const INITIAL_FORM_STATE: Partial<Details> = {
-  employmentType: EmploymentType.FULL_TIME,
-  officeLocation: "",
-  notes: "",
+const OPS_VALIDATION_SCHEMA: ValidationSchema = {
+  photo: {
+    required: true,
+    validate: (value) => !!value?.trim(),
+  },
+  employmentType: {
+    required: true,
+    validate: (value) => !!value,
+  },
+  officeLocation: {
+    required: true,
+    validate: (value) => !!value,
+  },
+  notes: {
+    required: true,
+    validate: (value) => !!value?.trim(),
+  },
 };
 
+const LS_OPS_FORM_KEY = DRAFT_KEYS.ops;
+
 export const Step2Form = () => {
-  const search = useSearch({ from: "/wizard" });
-  const currentRole = search.role || "ops";
-
-  const [formData, setFormData] =
-    useState<Partial<Details>>(INITIAL_FORM_STATE);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const isInitialLoadRef = useRef(true);
-
-  const handleClearDraft = () => {
-    setFormData(INITIAL_FORM_STATE);
-    setSelectedFile(null);
-    isInitialLoadRef.current = true;
-  };
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    },
-    [],
-  );
+  const {
+    formData,
+    setFormData,
+    errors,
+    touched,
+    handleInputChange,
+    handleBlur,
+    validateAndTouch,
+    isReadyToSubmit,
+    isSyncing,
+    handleClearDraft,
+    handleSubmit,
+  } = useForm<Details>(LS_OPS_FORM_KEY, OPS_VALIDATION_SCHEMA);
 
   const handleEmploymentTypeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -81,16 +98,21 @@ export const Step2Form = () => {
     [],
   );
 
-  const handleNotesChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setFormData((prev) => ({ ...prev, notes: e.target.value }));
-    },
-    [],
-  );
-
-  const handleFileChange = useCallback((file: File | null) => {
-    setSelectedFile(file);
+  const handleFileChange = useCallback((file: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      photo: file || undefined,
+    }));
+    validateAndTouch("photo", file || undefined);
   }, []);
+
+  const handleOfficeLocationSelect = (option: OfficeLocation | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      officeLocation: option || undefined,
+    }));
+    validateAndTouch("officeLocation", option || undefined);
+  };
 
   return (
     <>
@@ -106,37 +128,51 @@ export const Step2Form = () => {
       </div>
       <FileInput
         name="photo"
+        value={formData?.photo}
         placeholder="Upload Photo"
         onChange={handleFileChange}
       />
       <Select
         name="employmentType"
         options={EMPLOYMENT_TYPE_OPTIONS}
-        value={formData.employmentType}
+        value={formData?.employmentType}
         onChange={handleEmploymentTypeChange}
       />
-      <Input
+      <Autocomplete
         name="officeLocation"
-        type="text"
-        placeholder="Office Location"
-        value={formData.officeLocation || ""}
-        onChange={handleInputChange}
+        placeholder="Search Office Location..."
+        endpoint={LOCATIONS_ENDPOINT}
+        onOptionSelect={handleOfficeLocationSelect}
+        value={formData?.officeLocation?.name || ""}
+        onBlur={() => handleBlur("officeLocation")}
+        errorMessage={
+          touched.officeLocation && errors.officeLocation
+            ? errors.officeLocation
+            : undefined
+        }
       />
       <TextArea
         name="notes"
         placeholder="Notes"
-        value={formData.notes || ""}
-        onChange={handleNotesChange}
+        value={formData?.notes || ""}
+        onChange={handleInputChange}
       />
       <div className="flex gap-2 justify-center">
         <Button
+          type="button"
           variant={ButtonVariant.ORANGE}
           onClick={handleClearDraft}
-          type="button"
         >
           Clear Draft
         </Button>
-        <Button>Submit</Button>
+        <Button
+          loading={isSyncing()}
+          disabled={!isReadyToSubmit()}
+          onClick={handleSubmit}
+          type="button"
+        >
+          Submit
+        </Button>
       </div>
     </>
   );

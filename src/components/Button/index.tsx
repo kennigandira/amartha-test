@@ -1,24 +1,20 @@
 import { cn } from "@/lib/utils";
+import { Spinner } from "../Spinner";
 
 export const ButtonVariant = {
   GREEN: "bg-green-300 hover:bg-green-400",
   ORANGE: "bg-amber-300 hover:bg-amber-400",
 } as const;
 
-export const ButtonAs = {
-  LINK: "link",
-  BUTTON: "button",
-} as const;
-
-export type ButtonAs = (typeof ButtonAs)[keyof typeof ButtonAs];
 export type ButtonVariant = (typeof ButtonVariant)[keyof typeof ButtonVariant];
 interface IButton extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
-  as?: ButtonAs;
+  loading?: boolean;
 }
 
 export const Button = ({
   variant = ButtonVariant.GREEN,
+  loading,
   ...props
 }: IButton) => {
   const className = cn(
@@ -33,7 +29,7 @@ export const Button = ({
 
   return (
     <button {...props} className={className}>
-      {props.children}
+      {loading ? <Spinner /> : props.children}
     </button>
   );
 };

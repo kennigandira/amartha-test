@@ -4,15 +4,14 @@ import { Button, ButtonVariant } from "../Button";
 import { Autocomplete } from "../Autocomplete";
 import { useCallback } from "react";
 import { Role } from "@/constants/role";
-import type { Department } from "./use-departments";
 import { LinkButton } from "../LinkButton";
-import {
-  useForm,
-  type ValidationSchema,
-  type BasicInfo,
-} from "../../hooks/use-form";
+import { useForm, type ValidationSchema } from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
-import { useBasicInfo } from "./use-basic-info";
+import {
+  useBasicInfo,
+  type BasicInfo,
+  type Department,
+} from "./use-basic-info";
 
 const DEPARTMENTS_ENDPOINT = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/departments`;
 

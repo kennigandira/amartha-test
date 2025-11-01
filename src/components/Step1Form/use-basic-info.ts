@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import type { Department } from "./use-departments";
 import type { Role } from "@/constants/role";
 
 const BASICINFO_FETCH_URL = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/basicInfo`;
 
-interface BasicInfo {
+export interface Department {
+  id: number;
+  name: string;
+}
+
+export interface BasicInfo {
   fullName: string;
   email: string;
   department: Department;

@@ -10,13 +10,14 @@ import { cn } from "@/lib/utils";
 export interface FileInputProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "type" | "onChange" | "onError"
+    "type" | "onChange" | "onError" | "value"
   > {
-  onChange?: (file: File | null) => void;
+  onChange?: (file: string | null) => void;
   onError?: (error: string) => void;
   accept?: string;
   maxSize?: number;
   errorMessage?: string;
+  value?: string;
 }
 
 export const FileInput = ({
@@ -27,10 +28,10 @@ export const FileInput = ({
   maxSize = MAX_FILE_SIZE_BYTES,
   disabled,
   errorMessage,
+  value,
   ...props
 }: FileInputProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,23 +52,21 @@ export const FileInput = ({
     }
 
     setError(null);
+
     setSelectedFile(file);
-    onChange?.(file);
 
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
+        // setPreviewUrl(reader.result as string);
+        onChange?.(reader.result as string);
       };
       reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
     }
   };
 
   const clearFile = () => {
     setSelectedFile(null);
-    setPreviewUrl(null);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -147,12 +146,12 @@ export const FileInput = ({
         <p className="text-red-600 text-sm mt-1">{errorMessage}</p>
       )}
 
-      {previewUrl && !error && (
+      {value && !error && (
         <div className="mt-3">
           <img
-            src={previewUrl}
+            src={value}
             alt="Preview"
-            className="max-w-full h-auto max-h-48 rounded-lg border border-zinc-300"
+            className="max-w-full h-auto max-h-48 rounded-lg border border-zinc-300 mx-auto"
           />
         </div>
       )}

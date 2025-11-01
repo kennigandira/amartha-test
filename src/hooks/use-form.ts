@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import { Role } from "@/constants/role";
-import type { DRAFT_KEYS } from "@/constants/draft";
-import type { Department } from "@/components/Step1Form/use-departments";
+import { DRAFT_KEYS } from "@/constants/draft";
 import { useDebounce } from "./useDebounce";
+import { isEmptyObject } from "@/lib/utils";
+import { postDetails } from "@/api/details";
+import { postBasicInfo } from "@/api/basicInfo";
+import { useNavigate } from "@tanstack/react-router";
 
 interface ValidationRule<T = any> {
   required: boolean;
@@ -13,27 +15,20 @@ export type ValidationSchema = {
   [key: string]: ValidationRule;
 };
 
-export interface BasicInfo {
-  fullName: string;
-  email: string;
-  department: Department;
-  role: Role;
-  employeeId: string;
-}
-
 type FormErrors = Record<string, string | undefined>;
 
 type TouchedFields = Record<string, boolean>;
 
 interface ChangeFormDataProps {
   name: string;
-  value: string | Department | Role | undefined;
+  value: any;
 }
 
 export const useForm = <TFormData extends Record<string, any>>(
   lsFormKey: DRAFT_KEYS,
   validationSchema: ValidationSchema,
 ) => {
+  const navigate = useNavigate();
   const lsValues = localStorage.getItem(lsFormKey);
   const initialState = !!lsValues ? JSON.parse(lsValues) : null;
   const [formData, setFormData] = useState<Partial<TFormData>>(initialState);
@@ -77,6 +72,11 @@ export const useForm = <TFormData extends Record<string, any>>(
     setTouched({});
     setErrors({});
     localStorage.removeItem(lsFormKey);
+  };
+
+  const clearAllDrafts = () => {
+    localStorage.removeItem(DRAFT_KEYS.admin);
+    localStorage.removeItem(DRAFT_KEYS.ops);
   };
 
   const validateField = (fieldName: string, overrideValue?: any) => {
@@ -145,12 +145,43 @@ export const useForm = <TFormData extends Record<string, any>>(
   );
 
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
     },
     [lsFormKey],
   );
+
+  const handleSubmit = useCallback(async () => {
+    const lsBasicInfo = localStorage.getItem(DRAFT_KEYS.admin);
+    const lsDetails = localStorage.getItem(DRAFT_KEYS.ops);
+
+    const basicInfo =
+      lsBasicInfo && !isEmptyObject(JSON.parse(lsBasicInfo))
+        ? JSON.parse(lsBasicInfo)
+        : null;
+    const details =
+      lsDetails && !isEmptyObject(JSON.parse(lsDetails))
+        ? JSON.parse(lsDetails)
+        : null;
+
+    try {
+      if (!basicInfo && details) {
+        await postDetails(details);
+      } else if (basicInfo && details) {
+        const basicInfoResponse = await postBasicInfo(basicInfo);
+
+        await postDetails({
+          ...details,
+          employeeId: basicInfoResponse.employeeId,
+        });
+      }
+      clearAllDrafts();
+      navigate({
+        to: "/",
+      });
+    } catch (error) {}
+  }, []);
 
   return {
     formData,
@@ -164,5 +195,6 @@ export const useForm = <TFormData extends Record<string, any>>(
     isReadyToSubmit,
     isSyncing,
     handleClearDraft,
+    handleSubmit,
   };
 };
