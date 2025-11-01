@@ -28,18 +28,17 @@ type TouchedFields = Record<string, boolean>;
 interface ChangeFormDataProps {
   name: string;
   value: string | Department | Role | undefined;
-  lsFormKey: DRAFT_KEYS;
 }
 
 export const useForm = <TFormData extends Record<string, any>>(
-  initialState: any,
   lsFormKey: DRAFT_KEYS,
   validationSchema: ValidationSchema,
-  initialTouchedFields: TouchedFields = {},
 ) => {
+  const lsValues = localStorage.getItem(lsFormKey);
+  const initialState = !!lsValues ? JSON.parse(lsValues) : null;
   const [formData, setFormData] = useState<Partial<TFormData>>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<TouchedFields>(initialTouchedFields);
+  const [touched, setTouched] = useState<TouchedFields>({});
   const [isSynced, setIsSynced] = useState(true);
 
   const debouncedFormData = useDebounce(formData, 2000);
@@ -75,7 +74,7 @@ export const useForm = <TFormData extends Record<string, any>>(
 
   const handleClearDraft = () => {
     setFormData({});
-    setTouched(initialTouchedFields);
+    setTouched({});
     setErrors({});
     localStorage.removeItem(lsFormKey);
   };
@@ -88,10 +87,16 @@ export const useForm = <TFormData extends Record<string, any>>(
     }
 
     let error: string | undefined;
-    const valueToValidate = overrideValue !== undefined ? overrideValue : formData?.[fieldName as keyof TFormData];
+    const valueToValidate =
+      overrideValue !== undefined
+        ? overrideValue
+        : formData?.[fieldName as keyof TFormData];
 
     if (rule.required) {
-      if (!valueToValidate || (typeof valueToValidate === 'string' && valueToValidate.trim() === '')) {
+      if (
+        !valueToValidate ||
+        (typeof valueToValidate === "string" && valueToValidate.trim() === "")
+      ) {
         error = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
       } else if (rule.validate && !rule.validate(valueToValidate)) {
         error = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is invalid`;
@@ -110,18 +115,8 @@ export const useForm = <TFormData extends Record<string, any>>(
     return validateDataAgainstSchema(formData, validationSchema);
   };
 
-  const isLocalStorageInSync = (): boolean => {
-    if (!isSynced) return false;
-
-    const lsData = localStorage.getItem(lsFormKey);
-    if (!lsData) return false;
-
-    try {
-      const parsed = JSON.parse(lsData);
-      return validateDataAgainstSchema(parsed, validationSchema);
-    } catch {
-      return false;
-    }
+  const isReadyToSubmit = (): boolean => {
+    return isFormValid() && isSynced;
   };
 
   const isSyncing = (): boolean => {
@@ -150,11 +145,11 @@ export const useForm = <TFormData extends Record<string, any>>(
   );
 
   const handleInputChange = useCallback(
-    (lsFormKey: DRAFT_KEYS, e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      handleChangeFormData({ name, value, lsFormKey });
+      setFormData((prev) => ({ ...prev, [name]: value }));
     },
-    [],
+    [lsFormKey],
   );
 
   return {
@@ -166,8 +161,7 @@ export const useForm = <TFormData extends Record<string, any>>(
     handleInputChange,
     handleBlur,
     validateAndTouch,
-    isFormValid,
-    isLocalStorageInSync,
+    isReadyToSubmit,
     isSyncing,
     handleClearDraft,
   };

@@ -6,7 +6,11 @@ import { useCallback } from "react";
 import { Role } from "@/constants/role";
 import type { Department } from "./use-departments";
 import { LinkButton } from "../LinkButton";
-import { useForm, type ValidationSchema, type BasicInfo } from "../../hooks/use-form";
+import {
+  useForm,
+  type ValidationSchema,
+  type BasicInfo,
+} from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
 import { useBasicInfo } from "./use-basic-info";
 
@@ -39,14 +43,6 @@ const LS_ADMIN_FORM_KEY = DRAFT_KEYS.admin;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const INITIAL_TOUCHED_FIELDS = {
-  fullName: false,
-  email: false,
-  department: false,
-  role: false,
-  employeeId: false,
-};
-
 const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
   fullName: {
     required: true,
@@ -71,8 +67,6 @@ const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
 };
 
 export const Step1Form = () => {
-  const lsValues = localStorage.getItem(LS_ADMIN_FORM_KEY);
-  const currentDraftAdmin = !!lsValues ? JSON.parse(lsValues) : null;
   const {
     formData,
     setFormData,
@@ -81,12 +75,11 @@ export const Step1Form = () => {
     handleInputChange,
     handleBlur,
     validateAndTouch,
-    isFormValid,
-    isLocalStorageInSync,
+    isReadyToSubmit,
     isSyncing,
     handleChangeFormData,
     handleClearDraft,
-  } = useForm<BasicInfo>(currentDraftAdmin, LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA, INITIAL_TOUCHED_FIELDS);
+  } = useForm<BasicInfo>(LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA);
   const { data: basicInfo } = useBasicInfo();
 
   const handleDepartmentSelect = (option: Department | null) => {
@@ -112,7 +105,6 @@ export const Step1Form = () => {
       handleChangeFormData({
         name: "role",
         value: e.target.value,
-        lsFormKey: LS_ADMIN_FORM_KEY,
       });
     },
     [],
@@ -129,7 +121,7 @@ export const Step1Form = () => {
           type="text"
           placeholder="Full Name"
           value={formData?.fullName || ""}
-          onChange={(e) => handleInputChange(LS_ADMIN_FORM_KEY, e)}
+          onChange={handleInputChange}
           onBlur={() => handleBlur("fullName")}
         />
         {touched.fullName && errors.fullName && (
@@ -142,7 +134,7 @@ export const Step1Form = () => {
           type="email"
           placeholder="Email"
           value={formData?.email || ""}
-          onChange={(e) => handleInputChange(LS_ADMIN_FORM_KEY, e)}
+          onChange={handleInputChange}
           onBlur={() => handleBlur("email")}
         />
         {touched.email && errors.email && (
@@ -195,7 +187,7 @@ export const Step1Form = () => {
           Clear Draft
         </Button>
         <LinkButton
-          disabled={!isFormValid() || !isLocalStorageInSync()}
+          disabled={!isReadyToSubmit()}
           loading={isSyncing()}
           to="/wizard"
           search={{ role: "ops" }}
