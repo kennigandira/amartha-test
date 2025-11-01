@@ -13,7 +13,7 @@ export type ValidationSchema = {
   [key: string]: ValidationRule;
 };
 
-interface BasicInfo {
+export interface BasicInfo {
   fullName: string;
   email: string;
   department: Department;
@@ -21,21 +21,9 @@ interface BasicInfo {
   employeeId: string;
 }
 
-interface FormErrors {
-  fullName?: string;
-  email?: string;
-  department?: string;
-  role?: string;
-  employeeId?: string;
-}
+type FormErrors = Record<string, string | undefined>;
 
-interface TouchedFields {
-  fullName: boolean;
-  email: boolean;
-  department: boolean;
-  role: boolean;
-  employeeId: boolean;
-}
+type TouchedFields = Record<string, boolean>;
 
 interface ChangeFormDataProps {
   name: string;
@@ -43,22 +31,15 @@ interface ChangeFormDataProps {
   lsFormKey: DRAFT_KEYS;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export const useForm = (
+export const useForm = <TFormData extends Record<string, any>>(
   initialState: any,
   lsFormKey: DRAFT_KEYS,
   validationSchema: ValidationSchema,
+  initialTouchedFields: TouchedFields = {},
 ) => {
-  const [formData, setFormData] = useState<Partial<BasicInfo>>(initialState);
+  const [formData, setFormData] = useState<Partial<TFormData>>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<TouchedFields>({
-    fullName: false,
-    email: false,
-    department: false,
-    role: false,
-    employeeId: false,
-  });
+  const [touched, setTouched] = useState<TouchedFields>(initialTouchedFields);
   const [isSynced, setIsSynced] = useState(true);
 
   const debouncedFormData = useDebounce(formData, 2000);
@@ -75,14 +56,14 @@ export const useForm = (
   }, [debouncedFormData]);
 
   const validateDataAgainstSchema = (
-    data: Partial<BasicInfo>,
+    data: Partial<TFormData>,
     schema: ValidationSchema,
   ): boolean => {
     return Object.entries(schema).every(([fieldName, rule]) => {
       if (!rule.required) return true;
 
-      if (data && data[fieldName as keyof BasicInfo]) {
-        const fieldValue = data[fieldName as keyof BasicInfo];
+      if (data && data[fieldName as keyof TFormData]) {
+        const fieldValue = data[fieldName as keyof TFormData];
         if (rule.validate) {
           return rule.validate(fieldValue);
         }
@@ -94,74 +75,27 @@ export const useForm = (
 
   const handleClearDraft = () => {
     setFormData({});
-    setTouched({
-      fullName: false,
-      email: false,
-      department: false,
-      role: false,
-      employeeId: false,
-    });
+    setTouched(initialTouchedFields);
     setErrors({});
     localStorage.removeItem(lsFormKey);
   };
 
-  const validateFullName = (): string | undefined => {
-    if (!formData?.fullName || formData?.fullName?.trim() === "") {
-      return "Full name is required";
-    }
-    return undefined;
-  };
+  const validateField = (fieldName: string, overrideValue?: any) => {
+    const rule = validationSchema[fieldName];
 
-  const validateEmail = (): string | undefined => {
-    if (!formData?.email || formData?.email?.trim() === "") {
-      return "Email is required";
+    if (!rule) {
+      return true;
     }
-    if (formData?.email && !EMAIL_REGEX.test(formData.email)) {
-      return "Please enter a valid email address";
-    }
-    return undefined;
-  };
 
-  const validateDepartment = (
-    department?: BasicInfo["department"],
-  ): string | undefined => {
-    const deptToValidate = department ? department : formData?.department;
-    if (!deptToValidate || deptToValidate.id === 0) {
-      return "Department is required";
-    }
-    return undefined;
-  };
-
-  const validateRole = (): string | undefined => {
-    return undefined;
-  };
-
-  const validateEmployeeId = (): string | undefined => {
-    if (!formData.employeeId || formData.employeeId.trim() === "") {
-      return "Employee ID is required";
-    }
-    return undefined;
-  };
-
-  const validateField = (fieldName: keyof FormErrors, overrideValue?: any) => {
     let error: string | undefined;
+    const valueToValidate = overrideValue !== undefined ? overrideValue : formData?.[fieldName as keyof TFormData];
 
-    switch (fieldName) {
-      case "fullName":
-        error = validateFullName();
-        break;
-      case "email":
-        error = validateEmail();
-        break;
-      case "department":
-        error = validateDepartment(overrideValue);
-        break;
-      case "role":
-        error = validateRole();
-        break;
-      case "employeeId":
-        error = validateEmployeeId();
-        break;
+    if (rule.required) {
+      if (!valueToValidate || (typeof valueToValidate === 'string' && valueToValidate.trim() === '')) {
+        error = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+      } else if (rule.validate && !rule.validate(valueToValidate)) {
+        error = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is invalid`;
+      }
     }
 
     setErrors((prev) => ({

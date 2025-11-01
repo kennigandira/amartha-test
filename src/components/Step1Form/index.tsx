@@ -6,7 +6,7 @@ import { useCallback } from "react";
 import { Role } from "@/constants/role";
 import type { Department } from "./use-departments";
 import { LinkButton } from "../LinkButton";
-import { useForm, type ValidationSchema } from "../../hooks/use-form";
+import { useForm, type ValidationSchema, type BasicInfo } from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
 import { useBasicInfo } from "./use-basic-info";
 
@@ -38,6 +38,14 @@ const ROLE_OPTIONS: { children: string; value?: Role }[] = [
 const LS_ADMIN_FORM_KEY = DRAFT_KEYS.admin;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const INITIAL_TOUCHED_FIELDS = {
+  fullName: false,
+  email: false,
+  department: false,
+  role: false,
+  employeeId: false,
+};
 
 const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
   fullName: {
@@ -78,7 +86,7 @@ export const Step1Form = () => {
     isSyncing,
     handleChangeFormData,
     handleClearDraft,
-  } = useForm(currentDraftAdmin, LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA);
+  } = useForm<BasicInfo>(currentDraftAdmin, LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA, INITIAL_TOUCHED_FIELDS);
   const { data: basicInfo } = useBasicInfo();
 
   const handleDepartmentSelect = (option: Department | null) => {
