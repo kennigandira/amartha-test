@@ -1,6 +1,6 @@
-import clsx from "clsx";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAutocompleteSearch } from "./use-autocomplete-search";
+import { cn } from "@/lib/utils";
 
 interface AutocompleteOption {
   id: number;
@@ -162,7 +162,7 @@ export const Autocomplete = ({
     }
   };
 
-  const inputClassName = clsx(
+  const inputClassName = cn(
     classNameProp,
     "border rounded-2xl px-3 py-2 w-full",
     {
@@ -242,14 +242,11 @@ export const Autocomplete = ({
                     e.preventDefault();
                     handleSelectOption(option);
                   }}
-                  className={clsx(
-                    "px-3 py-2 cursor-pointer transition-colors",
-                    {
-                      "bg-green-100": isHighlighted,
-                      "bg-green-200 font-semibold": isSelected,
-                      "hover:bg-zinc-100": !isHighlighted && !isSelected,
-                    },
-                  )}
+                  className={cn("px-3 py-2 cursor-pointer transition-colors", {
+                    "bg-green-100": isHighlighted,
+                    "bg-green-200 font-semibold": isSelected,
+                    "hover:bg-zinc-100": !isHighlighted && !isSelected,
+                  })}
                 >
                   {option.name}
                 </li>

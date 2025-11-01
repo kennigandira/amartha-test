@@ -16,11 +16,7 @@ import { useBasicInfo } from "./use-basic-info";
 
 const DEPARTMENTS_ENDPOINT = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/departments`;
 
-const ROLE_OPTIONS: { children: string; value?: Role }[] = [
-  {
-    children: "Select a role...",
-    value: undefined,
-  },
+const ROLE_OPTIONS: { children: string; value: Role }[] = [
   {
     children: "Ops",
     value: Role.OPS,
@@ -83,31 +79,35 @@ export const Step1Form = () => {
   const { data: basicInfo } = useBasicInfo();
 
   const handleDepartmentSelect = (option: Department | null) => {
-    if (option) {
-      const departmentCode = option
-        ? option.name.substring(0, 3).toUpperCase()
-        : "";
+    const departmentCode = option
+      ? option.name.substring(0, 3).toUpperCase()
+      : "";
 
-      const employeesInDepartment = basicInfo.filter((employee) =>
-        employee.department.some((dept) => dept.id === option?.id),
-      );
-      const nextEmployeeNumber = employeesInDepartment.length + 1;
-      const employeeId = option
-        ? `${departmentCode}-${nextEmployeeNumber.toString().padStart(3, "0")}`
-        : "";
-      setFormData((prev) => ({ ...prev, department: option, employeeId }));
-      validateAndTouch("department", option || undefined);
-    }
+    const employeesInDepartment = option
+      ? basicInfo.filter((employee) => employee.department.id === option?.id)
+      : [];
+    const nextEmployeeNumber = employeesInDepartment.length + 1;
+    const employeeId = option
+      ? `${departmentCode}-${nextEmployeeNumber.toString().padStart(3, "0")}`
+      : "";
+    setFormData((prev) => ({
+      ...prev,
+      department: option || undefined,
+      employeeId,
+    }));
+    validateAndTouch("department", option || undefined);
   };
 
   const handleRoleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
       handleChangeFormData({
         name: "role",
-        value: e.target.value,
+        value: value,
       });
+      validateAndTouch("role", value);
     },
-    [],
+    [handleChangeFormData, validateAndTouch],
   );
 
   return (
@@ -115,69 +115,59 @@ export const Step1Form = () => {
       <div className="relative">
         <h2 className="text-2xl font-bold mb-5">Basic Info</h2>
       </div>
-      <div className="w-full">
-        <Input
-          name="fullName"
-          type="text"
-          placeholder="Full Name"
-          value={formData?.fullName || ""}
-          onChange={handleInputChange}
-          onBlur={() => handleBlur("fullName")}
-        />
-        {touched.fullName && errors.fullName && (
-          <p className="text-red-600 text-xs mt-1 ml-1">{errors.fullName}</p>
-        )}
-      </div>
-      <div className="w-full">
-        <Input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={formData?.email || ""}
-          onChange={handleInputChange}
-          onBlur={() => handleBlur("email")}
-        />
-        {touched.email && errors.email && (
-          <p className="text-red-600 text-xs mt-1 ml-1">{errors.email}</p>
-        )}
-      </div>
-      <div className="w-full">
-        <Autocomplete
-          name="department"
-          placeholder="Search department..."
-          endpoint={DEPARTMENTS_ENDPOINT}
-          onOptionSelect={handleDepartmentSelect}
-          value={formData?.department?.name || ""}
-          onBlur={() => handleBlur("department")}
-        />
-        {touched.department && errors.department && (
-          <p className="text-red-600 text-xs mt-1 ml-1">{errors.department}</p>
-        )}
-      </div>
-      <div className="w-full">
-        <Select
-          name="role"
-          options={ROLE_OPTIONS}
-          value={formData?.role || ""}
-          onChange={handleRoleChange}
-          onBlur={() => handleBlur("role")}
-        />
-        {touched.role && errors.role && (
-          <p className="text-red-600 text-xs mt-1 ml-1">{errors.role}</p>
-        )}
-      </div>
-      <div className="w-full">
-        <Input
-          key={formData?.employeeId || "empty"}
-          name="employeeId"
-          disabled
-          type="text"
-          value={formData?.employeeId || ""}
-        />
-        {touched.employeeId && errors.employeeId && (
-          <p className="text-red-600 text-xs mt-1 ml-1">{errors.employeeId}</p>
-        )}
-      </div>
+      <Input
+        name="fullName"
+        type="text"
+        placeholder="Full Name"
+        value={formData?.fullName || ""}
+        onChange={handleInputChange}
+        onBlur={() => handleBlur("fullName")}
+        errorMessage={
+          touched.fullName && errors.fullName ? errors.fullName : undefined
+        }
+      />
+      <Input
+        name="email"
+        type="email"
+        placeholder="Email"
+        value={formData?.email || ""}
+        onChange={handleInputChange}
+        onBlur={() => handleBlur("email")}
+        errorMessage={touched.email && errors.email ? errors.email : undefined}
+      />
+      <Autocomplete
+        name="department"
+        placeholder="Search department..."
+        endpoint={DEPARTMENTS_ENDPOINT}
+        onOptionSelect={handleDepartmentSelect}
+        value={formData?.department?.name || ""}
+        onBlur={() => handleBlur("department")}
+        errorMessage={
+          touched.department && errors.department
+            ? errors.department
+            : undefined
+        }
+      />
+      <Select
+        name="role"
+        options={ROLE_OPTIONS}
+        value={formData?.role || ""}
+        onChange={handleRoleChange}
+        onBlur={() => handleBlur("role")}
+        errorMessage={touched.role && errors.role ? errors.role : undefined}
+      />
+      <Input
+        key={formData?.employeeId || "empty"}
+        name="employeeId"
+        disabled
+        type="text"
+        value={formData?.employeeId || ""}
+        errorMessage={
+          touched.employeeId && errors.employeeId
+            ? errors.employeeId
+            : undefined
+        }
+      />
       <div className="flex gap-2 justify-center">
         <Button
           variant={ButtonVariant.ORANGE}

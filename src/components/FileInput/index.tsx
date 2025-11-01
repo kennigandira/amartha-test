@@ -16,6 +16,7 @@ export interface FileInputProps
   onError?: (error: string) => void;
   accept?: string;
   maxSize?: number;
+  errorMessage?: string;
 }
 
 export const FileInput = ({
@@ -25,6 +26,7 @@ export const FileInput = ({
   accept = ACCEPTED_IMAGE_TYPES.join(","),
   maxSize = MAX_FILE_SIZE_BYTES,
   disabled,
+  errorMessage,
   ...props
 }: FileInputProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -77,9 +79,15 @@ export const FileInput = ({
     fileInputRef.current?.click();
   };
 
+  const hasError = !!error || !!errorMessage;
+
   const containerClassName = cn(
-    "border border-zinc-500 rounded-2xl p-3 w-full cursor-pointer",
-    { "bg-gray-200": disabled },
+    "border rounded-2xl p-3 w-full cursor-pointer",
+    {
+      "bg-gray-200": disabled,
+      "border-red-500": hasError,
+      "border-zinc-500": !hasError,
+    },
     className,
   );
 
@@ -134,6 +142,10 @@ export const FileInput = ({
       </div>
 
       {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
+
+      {errorMessage && (
+        <p className="text-red-600 text-sm mt-1">{errorMessage}</p>
+      )}
 
       {previewUrl && !error && (
         <div className="mt-3">

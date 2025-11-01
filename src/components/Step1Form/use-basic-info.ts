@@ -7,7 +7,7 @@ const BASICINFO_FETCH_URL = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/bas
 interface BasicInfo {
   fullName: string;
   email: string;
-  department: Department[];
+  department: Department;
   role: Role;
   employeeId: string;
 }
