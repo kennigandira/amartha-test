@@ -2,6 +2,10 @@
 
 A modern employee management application built with React, TypeScript, and Vite. Features a multi-step wizard for adding employees with draft persistence and a team dashboard.
 
+## Brainstorming Whiteboard
+[<img width="1442" height="1026" alt="image" src="https://github.com/user-attachments/assets/6901a111-1d2d-42ea-9b8c-0b7a8dc865fe" />](https://excalidraw.com/#json=Th1bTF5s2LCN5ffryICCs,E9gj-3V1LUV1cTBMcI1Bhg)
+
+
 ## Features
 
 - **Multi-step employee wizard** with form validation across Admin and Ops workflows
