@@ -13,10 +13,19 @@ interface PaginationProps {
 const classes = {
   container: "pb-6 text-center",
   innerContainer: "flex items-center gap-2 justify-center mt-6",
-  button: (currentPage: number, isLoading: boolean) =>
+  button: (pageNum: number, currentPage: number, isLoading: boolean) =>
     cn(
       "px-3 py-2 rounded border transition-colors cursor-pointer",
-      currentPage === 1 || isLoading
+      pageNum === currentPage
+        ? "bg-green-100 border-green-400 text-green-700"
+        : isLoading
+          ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+          : "bg-white border-gray-300 hover:bg-green-50 text-gray-700",
+    ),
+  arrowButton: (isDisabled: boolean) =>
+    cn(
+      "px-3 py-2 rounded border transition-colors cursor-pointer",
+      isDisabled
         ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
         : "bg-white border-gray-300 hover:bg-gray-50 text-gray-700",
     ),
@@ -56,7 +65,7 @@ export const Pagination = ({
         <button
           onClick={handlePrevious}
           disabled={currentPage === 1 || isLoading}
-          className={classes.button(currentPage, isLoading)}
+          className={classes.arrowButton(currentPage === 1 || isLoading)}
           aria-label="Previous page"
         >
           <ChevronLeft size={16} />
@@ -67,7 +76,7 @@ export const Pagination = ({
             <button
               onClick={() => onPageChange(1)}
               disabled={isLoading}
-              className={classes.button(1, isLoading)}
+              className={classes.button(1, currentPage, isLoading)}
             >
               1
             </button>
@@ -82,7 +91,7 @@ export const Pagination = ({
             key={pageNum}
             onClick={() => onPageChange(pageNum)}
             disabled={isLoading}
-            className={classes.button(pageNum, isLoading)}
+            className={classes.button(pageNum, currentPage, isLoading)}
             aria-label={`Page ${pageNum}`}
             aria-current={pageNum === currentPage ? "page" : undefined}
           >
@@ -98,7 +107,7 @@ export const Pagination = ({
             <button
               onClick={() => onPageChange(totalPages)}
               disabled={isLoading}
-              className={classes.button(totalPages, isLoading)}
+              className={classes.button(totalPages, currentPage, isLoading)}
             >
               {totalPages}
             </button>
@@ -108,7 +117,9 @@ export const Pagination = ({
         <button
           onClick={handleNext}
           disabled={currentPage === totalPages || isLoading}
-          className={classes.button(currentPage, isLoading)}
+          className={classes.arrowButton(
+            currentPage === totalPages || isLoading,
+          )}
           aria-label="Next page"
         >
           <ChevronRight size={16} />
