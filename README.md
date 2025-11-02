@@ -17,7 +17,7 @@ A modern employee management application built with React, TypeScript, and Vite.
 - **Build Tool:** Vite 7.1.7
 - **Routing:** TanStack Router (file-based routing)
 - **Styling:** Tailwind CSS v4.1.16
-- **Icons:** Lucide React, React Icons
+- **Icons:** Lucide React
 - **Code Quality:** ESLint, Prettier
 
 ## Prerequisites
