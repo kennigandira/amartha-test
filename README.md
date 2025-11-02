@@ -64,11 +64,38 @@ Before you begin, ensure you have the following installed:
    VITE_DETAILS_SERVICE_PORT=http://localhost:4002
    ```
 
-4. **Start the JSON servers (in separate terminal windows)**
+4. **Start the development server with JSON servers**
 
-   The application requires two JSON servers for basic employee info and employee details.
+   The simplest way to get started is to run everything at once:
 
-   **Option A: Using npm scripts (recommended)**
+   ```bash
+   npm run dev:full
+   ```
+
+   This starts:
+   - Vite dev server on port 5173
+   - JSON server for basic info on port 4001
+   - JSON server for employee details on port 4002
+
+   The application will be available at `http://localhost:5173`
+
+   **Alternative setups (if you prefer):**
+
+   **Option A: Run servers and dev separately in different terminals**
+
+   Terminal 1 - Run both JSON servers:
+
+   ```bash
+   npm run servers
+   ```
+
+   Terminal 2 - Run dev server:
+
+   ```bash
+   npm run dev
+   ```
+
+   **Option B: Run each server individually**
 
    Terminal 1:
 
@@ -82,7 +109,13 @@ Before you begin, ensure you have the following installed:
    npm run server:step2
    ```
 
-   **Option B: Manual commands**
+   Terminal 3:
+
+   ```bash
+   npm run dev
+   ```
+
+   **Option C: Manual commands**
 
    Terminal 1 - Basic Info Service:
 
@@ -96,24 +129,10 @@ Before you begin, ensure you have the following installed:
    npx json-server@0.17.4 --host 0.0.0.0 --port 4002 --watch db_step2.json
    ```
 
-   **Option C: Run both servers in one terminal**
-
-   ```bash
-   npm run servers
-   ```
-
-5. **Start the development server (in another terminal window)**
+   Terminal 3 - Dev Server:
 
    ```bash
    npm run dev
-   ```
-
-   The application will be available at `http://localhost:5173` (default Vite port)
-
-   **Tip:** Or run everything at once with:
-
-   ```bash
-   npm run dev:full
    ```
 
 ### Docker Setup
