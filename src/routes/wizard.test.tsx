@@ -111,10 +111,12 @@ describe("Wizard Flow", () => {
       () => {
         const nextButton = screen.getByText("Next");
         expect(nextButton).not.toBeDisabled();
-        userEvent.click(nextButton);
       },
       { timeout: 3000 },
     );
+
+    const nextButton = screen.getByText("Next");
+    await userEvent.click(nextButton);
 
     // 5. Assert navigation to Step 2
     await waitFor(() => {
