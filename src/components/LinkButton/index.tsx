@@ -18,6 +18,25 @@ interface BaseLinkButtonProps
   loading?: boolean;
 }
 
+const classes = {
+  linkButton: (
+    variant: LinkButtonVariant,
+    disabled?: boolean,
+    loading?: boolean,
+    className?: string,
+  ) =>
+    cn(
+      className,
+      "px-5 py-2 text-sm font-semibold rounded-full transition-all",
+      {
+        "hover:-translate-y-2 cursor-pointer": !disabled && !loading,
+        "opacity-50 cursor-not-allowed": disabled,
+        "opacity-75 cursor-wait": loading,
+      },
+      variant,
+    ),
+};
+
 const BaseLinkButton = React.forwardRef<HTMLAnchorElement, BaseLinkButtonProps>(
   (
     {
@@ -30,19 +49,12 @@ const BaseLinkButton = React.forwardRef<HTMLAnchorElement, BaseLinkButtonProps>(
     },
     ref,
   ) => {
-    const linkClassName = cn(
-      className,
-      "px-5 py-2 text-sm font-semibold rounded-full transition-all",
-      {
-        "hover:-translate-y-2 cursor-pointer": !disabled && !loading,
-        "opacity-50 cursor-not-allowed": disabled,
-        "opacity-75 cursor-wait": loading,
-      },
-      variant,
-    );
-
     return (
-      <a ref={ref} {...props} className={linkClassName}>
+      <a
+        ref={ref}
+        {...props}
+        className={classes.linkButton(variant, disabled, loading, className)}
+      >
         {loading ? <Spinner /> : children}
       </a>
     );

@@ -16,6 +16,6 @@ export function generateOptions(options: GenerateOptionsProps[]) {
   });
 }
 
-export function isEmptyObject(obj: any) {
+export function isEmptyObject(obj: Record<string, unknown>) {
   return Object.keys(obj).length === 0;
 }

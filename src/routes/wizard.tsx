@@ -16,6 +16,11 @@ export const Route = createFileRoute("/wizard")({
   component: Wizard,
 });
 
+const classes = {
+  container: "p-8 text-center max-w-96 w-full",
+  formContainer: "flex flex-col gap-2",
+};
+
 function Wizard() {
   const search = useSearch({ from: "/wizard" });
   const renderContent = () => {
@@ -30,8 +35,8 @@ function Wizard() {
   };
 
   return (
-    <form className="p-8 text-center max-w-96 w-full">
-      <div className="flex flex-col gap-2">{renderContent()}</div>
+    <form className={classes.container}>
+      <div className={classes.formContainer}>{renderContent()}</div>
     </form>
   );
 }

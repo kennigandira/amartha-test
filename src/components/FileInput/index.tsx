@@ -20,6 +20,36 @@ export interface FileInputProps
   value?: string;
 }
 
+const classes = {
+  container: (disabled?: boolean, hasError?: boolean, className?: string) =>
+    cn(className, "border rounded-2xl p-3 w-full cursor-pointer", {
+      "bg-gray-200": disabled,
+      "border-red-500": hasError,
+      "border-zinc-500": !hasError,
+    }),
+  fileInputContainer: "flex items-center gap-2 flex-wrap",
+  input: "hidden",
+  button:
+    "cursor-pointer px-4 py-2 rounded-lg border border-zinc-500 bg-white hover:bg-zinc-50 transition-colors font-medium",
+  selectedFile: "text-sm text-zinc-700 flex-1 min-w-0 truncate",
+  clearButton: (disabled?: boolean) =>
+    cn("p-1 rounded-full hover:bg-zinc-200 transition-colors", {
+      "cursor-not-allowed opacity-50": disabled,
+    }),
+  clearButtonIcon: "text-zinc-700",
+  noFileSelected: "text-sm text-zinc-400",
+  errorUploadMessage: "mt-2 text-sm text-red-600",
+  validationErrorMessage: "text-red-600 text-sm mt-1",
+  previewImageContainer: "mt-3",
+  previewImage:
+    "max-w-full h-auto max-h-48 rounded-lg border border-zinc-300 mx-auto",
+};
+
+const PLACEHOLDER_TEXT = {
+  noFileSelected: "No file selected",
+  uploadPhoto: "Upload Photo",
+};
+
 export const FileInput = ({
   className,
   onChange,
@@ -27,7 +57,7 @@ export const FileInput = ({
   accept = ACCEPTED_IMAGE_TYPES.join(","),
   maxSize = MAX_FILE_SIZE_BYTES,
   disabled,
-  errorMessage,
+  errorMessage: validationErrorMessage,
   value,
   ...props
 }: FileInputProps) => {
@@ -79,80 +109,63 @@ export const FileInput = ({
     fileInputRef.current?.click();
   };
 
-  const hasError = !!error || !!errorMessage;
-
-  const containerClassName = cn(
-    "border rounded-2xl p-3 w-full cursor-pointer",
-    {
-      "bg-gray-200": disabled,
-      "border-red-500": hasError,
-      "border-zinc-500": !hasError,
-    },
-    className,
-  );
+  const hasError = !!error || !!validationErrorMessage;
 
   return (
-    <div className={containerClassName}>
+    <div className={classes.container(disabled, hasError, className)}>
       <input
         ref={fileInputRef}
         type="file"
         accept={accept}
         onChange={handleFileSelect}
         disabled={disabled}
-        className="hidden"
+        className={classes.input}
         {...props}
       />
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className={classes.fileInputContainer}>
         <button
           type="button"
           onClick={handleBrowseClick}
           disabled={disabled}
-          className={cn(
-            "cursor-pointer px-4 py-2 rounded-lg border border-zinc-500 bg-white hover:bg-zinc-50 transition-colors font-medium",
-          )}
+          className={classes.button}
         >
-          Upload Photo
+          {PLACEHOLDER_TEXT.uploadPhoto}
         </button>
 
         {selectedFile && (
           <>
-            <span className="text-sm text-zinc-700 flex-1 min-w-0 truncate">
-              {selectedFile.name}
-            </span>
+            <span className={classes.selectedFile}>{selectedFile.name}</span>
             <button
               type="button"
               onClick={clearFile}
               disabled={disabled}
-              className={cn(
-                "p-1 rounded-full hover:bg-zinc-200 transition-colors",
-                { "cursor-not-allowed opacity-50": disabled },
-              )}
+              className={classes.clearButton(disabled)}
               aria-label="Clear file"
             >
-              <X size={18} className="text-zinc-700" />
+              <X size={18} className={classes.clearButtonIcon} />
             </button>
           </>
         )}
 
         {!selectedFile && (
-          <span className="text-sm text-zinc-400">No file selected</span>
+          <span className={classes.noFileSelected}>
+            {PLACEHOLDER_TEXT.noFileSelected}
+          </span>
         )}
       </div>
 
-      {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
+      {error && <div className={classes.errorUploadMessage}>{error}</div>}
 
-      {errorMessage && (
-        <p className="text-red-600 text-sm mt-1">{errorMessage}</p>
+      {validationErrorMessage && (
+        <p className={classes.validationErrorMessage}>
+          {validationErrorMessage}
+        </p>
       )}
 
       {value && !error && (
-        <div className="mt-3">
-          <img
-            src={value}
-            alt="Preview"
-            className="max-w-full h-auto max-h-48 rounded-lg border border-zinc-300 mx-auto"
-          />
+        <div className={classes.previewImageContainer}>
+          <img src={value} alt="Preview" className={classes.previewImage} />
         </div>
       )}
     </div>

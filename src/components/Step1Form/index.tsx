@@ -2,7 +2,7 @@ import { Input } from "../Input";
 import { Select } from "../Select";
 import { Button, ButtonVariant } from "../Button";
 import { Autocomplete } from "../Autocomplete";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { LinkButton } from "../LinkButton";
 import { useForm, type ValidationSchema } from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
@@ -29,6 +29,18 @@ const ROLE_OPTIONS: { label: string; value: Role }[] = [
     value: Role.FINANCE,
   },
 ];
+
+const TEXTS = {
+  TITLE: "Basic Info",
+  FULL_NAME: "Full Name",
+  EMAIL: "Email",
+  DEPARTMENT: "Search department...",
+  ROLE: "Select role...",
+  EMPLOYEE_ID: "Employee ID",
+  CLEAR_DRAFT: "Clear Draft",
+  NEXT: "Next",
+  BASIC_INFO: "Basic Info",
+};
 
 const LS_ADMIN_FORM_KEY = DRAFT_KEYS.admin;
 
@@ -57,6 +69,12 @@ const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
   },
 };
 
+const classes = {
+  container: "relative",
+  title: "text-2xl font-bold mb-5",
+  buttonsContainer: "flex gap-2 justify-center",
+};
+
 export const Step1Form = () => {
   const {
     formData,
@@ -73,26 +91,42 @@ export const Step1Form = () => {
   } = useForm<BasicInfo>(LS_ADMIN_FORM_KEY, ADMIN_VALIDATION_SCHEMA);
   const { data: basicInfo } = useBasicInfo();
 
-  const handleDepartmentSelect = (option: Department | null) => {
-    const departmentCode = option
-      ? option.name.substring(0, 3).toUpperCase()
-      : "";
+  const errorMessages = useMemo(() => {
+    return {
+      fullName:
+        touched.fullName && errors.fullName ? errors.fullName : undefined,
+      email: touched.email && errors.email ? errors.email : undefined,
+      department:
+        touched.department && errors.department ? errors.department : undefined,
+      role: touched.role && errors.role ? errors.role : undefined,
+      employeeId:
+        touched.employeeId && errors.employeeId ? errors.employeeId : undefined,
+    };
+  }, [errors]);
 
-    const employeesInDepartment = option
-      ? basicInfo.filter((employee) => employee.department?.id === option?.id)
-      : [];
-    const nextEmployeeNumber = employeesInDepartment.length + 1;
-    const employeeId = option
-      ? `${departmentCode}-${nextEmployeeNumber.toString().padStart(3, "0")}`
-      : "";
+  const handleDepartmentSelect = useCallback(
+    (option: Department | null) => {
+      const departmentCode = option
+        ? option.name.substring(0, 3).toUpperCase()
+        : "";
 
-    setFormData((prev: BasicInfo) => ({
-      ...prev,
-      department: option || undefined,
-      employeeId,
-    }));
-    validateAndTouch("department", option || undefined);
-  };
+      const employeesInDepartment = option
+        ? basicInfo.filter((employee) => employee.department?.id === option?.id)
+        : [];
+      const nextEmployeeNumber = employeesInDepartment.length + 1;
+      const employeeId = option
+        ? `${departmentCode}-${nextEmployeeNumber.toString().padStart(3, "0")}`
+        : "";
+
+      setFormData((prev: BasicInfo) => ({
+        ...prev,
+        department: option || undefined,
+        employeeId,
+      }));
+      validateAndTouch("department", option || undefined);
+    },
+    [basicInfo, setFormData, validateAndTouch],
+  );
 
   const handleRoleChange = useCallback(
     (value: string | number) => {
@@ -106,41 +140,35 @@ export const Step1Form = () => {
 
   return (
     <>
-      <div className="relative">
-        <h2 className="text-2xl font-bold mb-5">Basic Info</h2>
+      <div className={classes.container}>
+        <h2 className={classes.title}>{TEXTS.BASIC_INFO}</h2>
       </div>
       <Input
         name="fullName"
         type="text"
-        placeholder="Full Name"
+        placeholder={TEXTS.FULL_NAME}
         value={formData?.fullName || ""}
         onChange={handleInputChange}
         onBlur={() => handleBlur("fullName")}
-        errorMessage={
-          touched.fullName && errors.fullName ? errors.fullName : undefined
-        }
+        errorMessage={errorMessages.fullName}
       />
       <Input
         name="email"
         type="email"
-        placeholder="Email"
+        placeholder={TEXTS.EMAIL}
         value={formData?.email || ""}
         onChange={handleInputChange}
         onBlur={() => handleBlur("email")}
-        errorMessage={touched.email && errors.email ? errors.email : undefined}
+        errorMessage={errorMessages.email}
       />
       <Autocomplete
         name="department"
-        placeholder="Search department..."
+        placeholder={TEXTS.DEPARTMENT}
         endpoint={DEPARTMENTS_ENDPOINT}
         onOptionSelect={handleDepartmentSelect}
         value={formData?.department?.name}
         onBlur={() => handleBlur("department")}
-        errorMessage={
-          touched.department && errors.department
-            ? errors.department
-            : undefined
-        }
+        errorMessage={errorMessages.department}
       />
       <Select
         name="role"
@@ -148,27 +176,24 @@ export const Step1Form = () => {
         value={formData?.role}
         onChange={handleRoleChange}
         onBlur={() => handleBlur("role")}
-        errorMessage={touched.role && errors.role ? errors.role : undefined}
+        errorMessage={errorMessages.role}
       />
       <Input
         key={formData?.employeeId || "empty"}
         name="employeeId"
+        placeholder={TEXTS.EMPLOYEE_ID}
         disabled
         type="text"
         value={formData?.employeeId}
-        errorMessage={
-          touched.employeeId && errors.employeeId
-            ? errors.employeeId
-            : undefined
-        }
+        errorMessage={errorMessages.employeeId}
       />
-      <div className="flex gap-2 justify-center">
+      <div className={classes.buttonsContainer}>
         <Button
           variant={ButtonVariant.ORANGE}
           onClick={handleClearDraft}
           type="button"
         >
-          Clear Draft
+          {TEXTS.CLEAR_DRAFT}
         </Button>
         <LinkButton
           disabled={!isReadyToSubmit()}
@@ -176,7 +201,7 @@ export const Step1Form = () => {
           to="/wizard"
           search={{ role: "ops" }}
         >
-          Next
+          {TEXTS.NEXT}
         </LinkButton>
       </div>
     </>

@@ -9,7 +9,7 @@ interface UseBasicInfoParams {
 export function useBasicInfo(params?: UseBasicInfoParams) {
   const [basicInfo, setBasicInfo] = useState<BasicInfo[]>([]);
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState();
+  const [error, setError] = useState<Error | null>(null);
 
   const department = params?.department;
 
@@ -23,7 +23,11 @@ export function useBasicInfo(params?: UseBasicInfoParams) {
 
         setBasicInfo(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError(err as any);
+        setError(
+          err instanceof Error
+            ? err
+            : new Error(String(err) || "Failed to fetch basic info"),
+        );
       } finally {
         setLoading(false);
       }

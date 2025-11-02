@@ -8,7 +8,9 @@ import { LinkButton } from "@/components/LinkButton";
 import { Spinner } from "@/components/Spinner";
 import { useEmployees } from "@/hooks/use-employees";
 import { EmployeeCard } from "@/components/EmployeeCard";
-import { Pagination, ITEMS_PER_PAGE } from "@/components/Pagination";
+import { Pagination } from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 8;
 
 export type HomepageSearch = {
   page?: number;
@@ -22,6 +24,32 @@ export const Route = createFileRoute("/")({
   },
   component: Index,
 });
+
+const TEXTS = {
+  OUR_TEAM: "Our Team",
+  ADD_EMPLOYEE: "Add Employee",
+  LOADING_EMPLOYEES: "Loading employees...",
+  ERROR_LOADING_EMPLOYEES: "Error loading employees",
+  NO_EMPLOYEES_FOUND: "No employees found",
+  NO_EMPLOYEES_MESSAGE: "Click 'Add Employee' to add your first team member",
+};
+
+const classes = {
+  container: "text-zinc-800 max-w-4xl px-6 pt-8 min-h-screen",
+  headerContainer: "flex justify-between items-center mb-8 gap-8 md:p-0",
+  title: "text-4xl text-center font-light",
+  loadingContainer: "flex justify-center items-center py-10",
+  loadingText: "ml-3 text-zinc-600",
+  errorContainer: "border-2 border-red-400 bg-red-50 p-4 rounded-lg mb-5",
+  errorTitle: "text-red-700 font-bold",
+  errorMessage: "text-red-600 text-sm",
+  noEmployeesContainer:
+    "border-2 border-zinc-300 bg-zinc-50 p-8 rounded-lg text-center",
+  noEmployeesTitle: "text-zinc-600 text-lg",
+  noEmployeesMessage: "text-zinc-500 text-sm mt-2",
+  employeesContainer: "grid grid-cols-1 md:grid-cols-4 gap-4",
+  spinner: "h-8 w-8",
+};
 
 function Index() {
   const navigate = useNavigate({ from: "/" });
@@ -49,37 +77,37 @@ function Index() {
   }, [requestedPage, currentPage, totalCount, navigate]);
 
   return (
-    <div className="text-zinc-800 max-w-4xl px-6 pt-8 min-h-screen">
-      <div className="flex justify-between items-center mb-8 gap-8 md:p-0">
-        <h1 className="text-4xl text-center font-light">Our Team</h1>
-        <LinkButton to="/wizard">Add Employee</LinkButton>
+    <div className={classes.container}>
+      <div className={classes.headerContainer}>
+        <h1 className={classes.title}>{TEXTS.OUR_TEAM}</h1>
+        <LinkButton to="/wizard">{TEXTS.ADD_EMPLOYEE}</LinkButton>
       </div>
 
       {isLoading && (
-        <div className="flex justify-center items-center py-10">
-          <Spinner className="h-8 w-8" />
-          <span className="ml-3 text-zinc-600">Loading employees...</span>
+        <div className={classes.loadingContainer}>
+          <Spinner className={classes.spinner} />
+          <span className={classes.loadingText}>{TEXTS.LOADING_EMPLOYEES}</span>
         </div>
       )}
 
       {error && (
-        <div className="border-2 border-red-400 bg-red-50 p-4 rounded-lg mb-5">
-          <p className="text-red-700 font-bold">Error loading employees</p>
-          <p className="text-red-600 text-sm">{error.message}</p>
+        <div className={classes.errorContainer}>
+          <p className={classes.errorTitle}>{TEXTS.ERROR_LOADING_EMPLOYEES}</p>
+          <p className={classes.errorMessage}>{error.message}</p>
         </div>
       )}
 
       {!isLoading && !error && employees.length === 0 && (
-        <div className="border-2 border-zinc-300 bg-zinc-50 p-8 rounded-lg text-center">
-          <p className="text-zinc-600 text-lg">No employees found</p>
-          <p className="text-zinc-500 text-sm mt-2">
-            Click "Add Employee" to add your first team member
+        <div className={classes.noEmployeesContainer}>
+          <p className={classes.noEmployeesTitle}>{TEXTS.NO_EMPLOYEES_FOUND}</p>
+          <p className={classes.noEmployeesMessage}>
+            {TEXTS.NO_EMPLOYEES_MESSAGE}
           </p>
         </div>
       )}
 
       {!isLoading && !error && employees.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={classes.employeesContainer}>
           {employees.map((employee) => (
             <EmployeeCard key={employee.email} employee={employee} />
           ))}

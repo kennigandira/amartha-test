@@ -7,31 +7,30 @@ import { Autocomplete } from "../Autocomplete";
 import { useForm, type ValidationSchema } from "@/hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
+import {
+  EmploymentType,
+  type Details,
+  type OfficeLocation,
+} from "@/api/details";
 
-export interface OfficeLocation {
-  id: number;
-  name: string;
-}
+const classes = {
+  container: "relative",
+  backButton: "absolute left-0",
+  title: "text-2xl font-bold mb-5",
+  buttonsContainer: "flex gap-2 justify-center",
+};
+
+const TEXTS = {
+  TITLE: "Details",
+  CLEAR_DRAFT: "Clear Draft",
+  SUBMIT: "Submit",
+  BACK: "Back",
+  UPLOAD_PHOTO: "Upload Photo",
+  OFFICE_LOCATION: "Search Office Location...",
+  NOTES: "Notes",
+};
 
 const LOCATIONS_ENDPOINT = `${import.meta.env.VITE_DETAILS_SERVICE_PORT}/locations`;
-
-export const EmploymentType = {
-  FULL_TIME: "full-time",
-  PART_TIME: "part-time",
-  CONTRACT: "contract",
-  INTERN: "intern",
-} as const;
-
-export interface Details {
-  employeeId?: string;
-  employmentType: EmploymentType;
-  officeLocation: OfficeLocation;
-  notes: string;
-  photo: string;
-}
-
-export type EmploymentType =
-  (typeof EmploymentType)[keyof typeof EmploymentType];
 
 const EMPLOYMENT_TYPE_OPTIONS: { label: string; value: EmploymentType }[] = [
   {
@@ -119,23 +118,23 @@ export const Step2Form = () => {
 
   return (
     <>
-      <div className="relative">
+      <div className={classes.container}>
         {canGoBack ? (
           <Button
             type="button"
-            className="absolute left-0"
+            className={classes.backButton}
             onClick={() => router.history.back()}
           >
-            Back
+            {TEXTS.BACK}
           </Button>
         ) : null}
 
-        <h2 className="text-2xl font-bold mb-5">Details</h2>
+        <h2 className={classes.title}>{TEXTS.TITLE}</h2>
       </div>
       <FileInput
         name="photo"
         value={formData?.photo}
-        placeholder="Upload Photo"
+        placeholder={TEXTS.UPLOAD_PHOTO}
         onChange={handleFileChange}
       />
       <Select
@@ -146,7 +145,7 @@ export const Step2Form = () => {
       />
       <Autocomplete
         name="officeLocation"
-        placeholder="Search Office Location..."
+        placeholder={TEXTS.OFFICE_LOCATION}
         endpoint={LOCATIONS_ENDPOINT}
         onOptionSelect={handleOfficeLocationSelect}
         value={formData?.officeLocation?.name || ""}
@@ -159,17 +158,17 @@ export const Step2Form = () => {
       />
       <TextArea
         name="notes"
-        placeholder="Notes"
+        placeholder={TEXTS.NOTES}
         value={formData?.notes || ""}
         onChange={handleInputChange}
       />
-      <div className="flex gap-2 justify-center">
+      <div className={classes.buttonsContainer}>
         <Button
           type="button"
           variant={ButtonVariant.ORANGE}
           onClick={handleClearDraft}
         >
-          Clear Draft
+          {TEXTS.CLEAR_DRAFT}
         </Button>
         <Button
           loading={isSyncing()}
@@ -177,7 +176,7 @@ export const Step2Form = () => {
           onClick={handleSubmit}
           type="button"
         >
-          Submit
+          {TEXTS.SUBMIT}
         </Button>
       </div>
     </>

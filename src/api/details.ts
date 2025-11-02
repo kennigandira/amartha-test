@@ -1,8 +1,29 @@
-import type { Details } from "@/components/Step2Form";
-
 const DETAILS_ENDPOINT = `${import.meta.env.VITE_DETAILS_SERVICE_PORT}/details`;
 
-export async function postDetails(body: any) {
+export const EmploymentType = {
+  FULL_TIME: "full-time",
+  PART_TIME: "part-time",
+  CONTRACT: "contract",
+  INTERN: "intern",
+} as const;
+
+export interface Details {
+  employeeId?: string;
+  employmentType: EmploymentType;
+  officeLocation: OfficeLocation;
+  notes?: string;
+  photo: string;
+}
+
+export type EmploymentType =
+  (typeof EmploymentType)[keyof typeof EmploymentType];
+
+export interface OfficeLocation {
+  id: number;
+  name: string;
+}
+
+export async function postDetails(body: Details) {
   try {
     const res = await fetch(DETAILS_ENDPOINT, {
       method: "POST",

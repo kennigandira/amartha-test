@@ -23,7 +23,7 @@ export interface BasicInfo {
 
 const BASIC_INFO_ENDPOINT = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/basicInfo`;
 
-export async function postBasicInfo(body: any) {
+export async function postBasicInfo(body: BasicInfo) {
   try {
     const response = await fetch(BASIC_INFO_ENDPOINT, {
       method: "POST",

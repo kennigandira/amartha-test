@@ -8,8 +8,8 @@ interface AutocompleteOption {
 interface UseAutocompleteSearchParams {
   searchQuery: string;
   endpoint: string;
-  debounceMs?: number;
-  minQueryLength?: number;
+  debounceMs: number;
+  minQueryLength: number;
 }
 
 interface UseAutocompleteSearchResult {
@@ -18,14 +18,11 @@ interface UseAutocompleteSearchResult {
   error: Error | null;
 }
 
-const DEBOUNCE_DELAY = 300;
-const MIN_QUERY_LENGTH = 1;
-
 export function useAutocompleteSearch({
   searchQuery,
   endpoint,
-  debounceMs = DEBOUNCE_DELAY,
-  minQueryLength = MIN_QUERY_LENGTH,
+  debounceMs,
+  minQueryLength,
 }: UseAutocompleteSearchParams): UseAutocompleteSearchResult {
   const [data, setData] = useState<AutocompleteOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);

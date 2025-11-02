@@ -4,15 +4,22 @@ interface EmployeeCardProps {
   employee: MergedEmployee;
 }
 
-const PLACEHOLDER_IMAGE =
-  "https://via.placeholder.com/80/e4e4e7/52525b?text=No+Photo";
+const classes = {
+  employeeCard:
+    "w-fit md:w-auto border border-neutral-400 p-4 gap-6 rounded-3xl hover:-translate-y-2",
+  employeePhoto: "aspect-square w-full rounded-3xl object-cover",
+  employeeName: "mr-2 text-xl",
+  employeeRole: "text-sm capitalize text-neutral-500",
+  employeeLocation: "mt-2 text-neutral-800",
+  employeeInfo: "text-zinc-800 mt-4",
+};
 
 const PLACEHOLDER_TEXT = {
   fullName: "No name provided",
   role: "No role specified",
   location: "No location specified",
   department: "No department",
-} as const;
+};
 
 export const EmployeeCard = ({ employee }: EmployeeCardProps) => {
   const departmentName = employee.department?.name;
@@ -22,25 +29,22 @@ export const EmployeeCard = ({ employee }: EmployeeCardProps) => {
     : location;
 
   return (
-    <div className="w-fit md:w-auto border border-neutral-400 p-4 gap-6 rounded-3xl hover:-translate-y-2">
+    <div className={classes.employeeCard}>
       <img
-        className="aspect-square w-full rounded-3xl object-cover"
-        src={employee.photo || PLACEHOLDER_IMAGE}
+        className={classes.employeePhoto}
+        src={employee.photo}
         alt={employee.fullName || PLACEHOLDER_TEXT.fullName}
-        onError={(e) => {
-          e.currentTarget.src = PLACEHOLDER_IMAGE;
-        }}
       />
-      <div className="text-zinc-800 mt-4">
+      <div className={classes.employeeInfo}>
         <div>
-          <span className="mr-2 text-xl">
+          <span className={classes.employeeName}>
             {employee.fullName || PLACEHOLDER_TEXT.fullName}
           </span>
         </div>
-        <div className="text-sm capitalize text-neutral-500">
+        <div className={classes.employeeRole}>
           {employee.role || PLACEHOLDER_TEXT.role}
         </div>
-        <div className="mt-2 text-neutral-800">{displayText}</div>
+        <div className={classes.employeeLocation}>{displayText}</div>
       </div>
     </div>
   );

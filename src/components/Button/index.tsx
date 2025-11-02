@@ -12,23 +12,30 @@ interface IButton extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+const classes = {
+  button: (variant: ButtonVariant, disabled?: boolean, className?: string) =>
+    cn(
+      className,
+      "px-5 py-2 text-sm font-semibold rounded-full transition-all",
+      {
+        "hover:-translate-y-2 cursor-pointer": !disabled,
+        "opacity-50 cursor-not-allowed": disabled,
+      },
+      variant,
+    ),
+};
+
 export const Button = ({
   variant = ButtonVariant.GREEN,
   loading,
+  disabled,
   ...props
 }: IButton) => {
-  const className = cn(
-    props.className,
-    "px-5 py-2 text-sm font-semibold rounded-full transition-all",
-    {
-      "hover:-translate-y-2 cursor-pointer": !props.disabled,
-      "opacity-50 cursor-not-allowed": props.disabled,
-    },
-    variant,
-  );
-
   return (
-    <button {...props} className={className}>
+    <button
+      {...props}
+      className={classes.button(variant, disabled, props.className)}
+    >
       {loading ? <Spinner /> : props.children}
     </button>
   );

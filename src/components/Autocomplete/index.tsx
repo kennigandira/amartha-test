@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useAutocompleteSearch } from "./use-autocomplete-search";
 import { cn } from "@/lib/utils";
+import { KEYBOARD_EVENTS } from "@/constants/keyboardEvents";
 
-interface AutocompleteOption {
+export interface AutocompleteOption {
   id: number;
   name: string;
 }
 
+const MIN_QUERY_LENGTH = 1;
+const DEFAULT_DEBOUNCE_MS = 300;
 interface AutocompleteProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -21,15 +24,43 @@ interface AutocompleteProps
   errorMessage?: string;
 }
 
+const classes = {
+  inputContainer: "relative w-full",
+  input: (disabled?: boolean, errorMessage?: string, className?: string) =>
+    cn(className, "border rounded-2xl px-3 py-2 w-full", {
+      "bg-gray-200": disabled,
+      "border-red-500": errorMessage,
+      "border-zinc-500": !errorMessage,
+    }),
+  errorValidation: "text-red-600 text-sm mt-1",
+  optionsContainer:
+    "absolute z-10 w-full mt-1 bg-white border border-zinc-500 rounded-2xl shadow-lg max-h-60 overflow-auto top-10",
+  infoItem: "px-3 py-2 text-zinc-600 text-sm",
+  errorItem: "px-3 py-2 text-red-600 text-sm",
+  optionItem: (isHighlighted: boolean, isSelected: boolean) =>
+    cn("px-3 py-2 cursor-pointer transition-colors", {
+      "bg-green-100": isHighlighted,
+      "bg-green-200 font-semibold": isSelected,
+      "hover:bg-zinc-100": !isHighlighted && !isSelected,
+    }),
+};
+
+const TEXTS = {
+  LOADING: "Loading...",
+  ERROR: "Error loading results. Please try again.",
+  NO_RESULTS: "No results found",
+  SEARCH: "Search...",
+};
+
 export const Autocomplete = ({
   endpoint,
   onOptionSelect,
   value = "",
   onChange,
   className: classNameProp,
-  placeholder = "Search...",
-  debounceMs = 300,
-  minQueryLength = 1,
+  placeholder = TEXTS.SEARCH,
+  debounceMs = DEFAULT_DEBOUNCE_MS,
+  minQueryLength = MIN_QUERY_LENGTH,
   disabled,
   errorMessage,
   ...props
@@ -73,20 +104,6 @@ export const Autocomplete = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (highlightedIndex >= 0 && dropdownRef.current) {
-      const highlightedElement = dropdownRef.current.children[
-        highlightedIndex
-      ] as HTMLElement;
-      if (highlightedElement) {
-        highlightedElement.scrollIntoView({
-          block: "nearest",
-          behavior: "smooth",
-        });
-      }
-    }
-  }, [highlightedIndex]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
@@ -119,32 +136,32 @@ export const Autocomplete = ({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen && e.key !== "Escape") {
+    if (!isOpen && e.key !== KEYBOARD_EVENTS.ESCAPE) {
       setIsOpen(true);
       return;
     }
 
     switch (e.key) {
-      case "ArrowDown":
+      case KEYBOARD_EVENTS.ARROW_DOWN:
         e.preventDefault();
         setHighlightedIndex((prev) =>
           prev < data.length - 1 ? prev + 1 : prev,
         );
         break;
 
-      case "ArrowUp":
+      case KEYBOARD_EVENTS.ARROW_UP:
         e.preventDefault();
         setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
 
-      case "Enter":
+      case KEYBOARD_EVENTS.ENTER:
         e.preventDefault();
         if (highlightedIndex >= 0 && data[highlightedIndex]) {
           handleSelectOption(data[highlightedIndex]);
         }
         break;
 
-      case "Escape":
+      case KEYBOARD_EVENTS.ESCAPE:
         e.preventDefault();
         setIsOpen(false);
         setHighlightedIndex(-1);
@@ -162,16 +179,6 @@ export const Autocomplete = ({
     }
   };
 
-  const inputClassName = cn(
-    classNameProp,
-    "border rounded-2xl px-3 py-2 w-full",
-    {
-      "bg-gray-200": disabled,
-      "border-red-500": errorMessage,
-      "border-zinc-500": !errorMessage,
-    },
-  );
-
   const showDropdown = isOpen && !disabled;
   const hasResults = data.length > 0;
   const shouldShowLoading = isLoading && inputValue.length >= minQueryLength;
@@ -180,7 +187,7 @@ export const Autocomplete = ({
   const shouldShowError = error && !isLoading;
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className={classes.inputContainer}>
       <input
         {...props}
         ref={inputRef}
@@ -190,7 +197,7 @@ export const Autocomplete = ({
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         placeholder={placeholder}
-        className={inputClassName}
+        className={classes.input(disabled, errorMessage, classNameProp)}
         disabled={disabled}
         autoComplete="off"
         role="combobox"
@@ -200,30 +207,26 @@ export const Autocomplete = ({
       />
 
       {errorMessage && (
-        <p className="text-red-600 text-sm mt-1">{errorMessage}</p>
+        <p className={classes.errorValidation}>{errorMessage}</p>
       )}
 
-      {showDropdown && (
+      {showDropdown && inputValue.length >= minQueryLength && (
         <ul
           ref={dropdownRef}
           id="autocomplete-dropdown"
           role="listbox"
-          className="absolute z-10 w-full mt-1 bg-white border border-zinc-500 rounded-2xl shadow-lg max-h-60 overflow-auto"
+          className={classes.optionsContainer}
         >
           {shouldShowLoading && (
-            <li className="px-3 py-2 text-zinc-600 text-sm">Loading...</li>
+            <li className={classes.infoItem}>{TEXTS.LOADING}</li>
           )}
 
           {shouldShowError && (
-            <li className="px-3 py-2 text-red-600 text-sm">
-              Error loading results. Please try again.
-            </li>
+            <li className={classes.errorItem}>{TEXTS.ERROR}</li>
           )}
 
           {shouldShowEmpty && (
-            <li className="px-3 py-2 text-zinc-600 text-sm">
-              No results found
-            </li>
+            <li className={classes.infoItem}>{TEXTS.NO_RESULTS}</li>
           )}
 
           {!isLoading &&
@@ -242,11 +245,7 @@ export const Autocomplete = ({
                     e.preventDefault();
                     handleSelectOption(option);
                   }}
-                  className={cn("px-3 py-2 cursor-pointer transition-colors", {
-                    "bg-green-100": isHighlighted,
-                    "bg-green-200 font-semibold": isSelected,
-                    "hover:bg-zinc-100": !isHighlighted && !isSelected,
-                  })}
+                  className={classes.optionItem(isHighlighted, isSelected)}
                 >
                   {option.name}
                 </li>
