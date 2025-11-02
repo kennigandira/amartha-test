@@ -34,7 +34,8 @@ export const Button = ({
   return (
     <button
       {...props}
-      className={classes.button(variant, disabled, props.className)}
+      disabled={disabled || loading}
+      className={classes.button(variant, disabled || loading, props.className)}
     >
       {loading ? <Spinner /> : props.children}
     </button>

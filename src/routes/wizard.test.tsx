@@ -10,7 +10,6 @@ import userEvent from "@testing-library/user-event";
 
 vi.unmock("@tanstack/react-router");
 
-// Mock the API endpoints
 vi.mock("../components/Autocomplete/use-autocomplete-search", () => ({
   useAutocompleteSearch: (params: {
     searchQuery: string;
@@ -39,7 +38,6 @@ vi.mock("../components/Autocomplete/use-autocomplete-search", () => ({
   },
 }));
 
-// Mock the API calls
 vi.mock("../api/basicInfo", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api/basicInfo")>();
   return {
@@ -58,6 +56,15 @@ vi.mock("../api/details", async (importOriginal) => {
     postDetails: vi.fn(() => Promise.resolve({ id: 1 })),
   };
 });
+
+vi.mock("../hooks/use-employees", () => ({
+  useEmployees: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+    totalCount: 0,
+  })),
+}));
 
 describe("Wizard Flow", () => {
   it("should navigate through the wizard, fill out forms, and submit", async () => {

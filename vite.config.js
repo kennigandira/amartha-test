@@ -23,5 +23,9 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
+    env: {
+      VITE_BASIC_INFO_SERVICE_PORT: "http://localhost:4001",
+      VITE_DETAILS_SERVICE_PORT: "http://localhost:4002",
+    },
   },
 });

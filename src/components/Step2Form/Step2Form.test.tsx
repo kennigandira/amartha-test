@@ -4,7 +4,6 @@ import { vi, beforeEach, describe, it, expect } from "vitest";
 import { Step2Form } from "./index";
 import { useAutocompleteSearch } from "../Autocomplete/use-autocomplete-search";
 
-// Mock the hooks and router
 vi.mock("../Autocomplete/use-autocomplete-search", () => ({
   useAutocompleteSearch: vi.fn(),
 }));
@@ -106,7 +105,6 @@ describe("Step2Form", () => {
 
   describe("Form Validation", () => {
     it("shows error for empty photo on blur", async () => {
-      const user = userEvent.setup({ delay: null });
       render(<Step2Form />);
 
       const photoInput = screen.getByPlaceholderText("Upload Photo");
@@ -121,25 +119,21 @@ describe("Step2Form", () => {
     });
 
     it("does not validate Notes field (optional)", async () => {
-      const user = userEvent.setup();
       render(<Step2Form />);
 
       const notesInput = screen.getByPlaceholderText("Notes");
       fireEvent.blur(notesInput);
 
-      // Notes is optional, so no error should appear
       expect(screen.queryByText(/Notes is required/i)).not.toBeInTheDocument();
     });
 
     it("disables Submit button when form is invalid", () => {
       render(<Step2Form />);
-      // Check for disabled attribute on the button
       const submitButton = screen.getByText("Submit");
       expect(submitButton).toBeDisabled();
     });
 
     it("enables Submit button when all required fields are filled", async () => {
-      const user = userEvent.setup();
       mockUseAutocompleteSearch.mockReturnValue({
         data: mockOfficeLocations,
         isLoading: false,
@@ -155,7 +149,6 @@ describe("Step2Form", () => {
 
       render(<Step2Form />);
 
-      // Verify the component rendered with draft data
       expect(screen.getByText("Submit")).toBeInTheDocument();
     });
   });
@@ -209,9 +202,8 @@ describe("Step2Form", () => {
 
       await user.click(screen.getByText("New York"));
 
-      // Verify selection was made by checking option is visible
       await waitFor(() => {
-        expect(screen.getByText("New York")).toBeInTheDocument();
+        expect(officeLocationInput).toHaveValue("New York");
       });
     });
   });
@@ -224,7 +216,6 @@ describe("Step2Form", () => {
       const notesInput = screen.getByPlaceholderText("Notes");
       await user.type(notesInput, "Important notes");
 
-      // Wait for debounce (2 seconds) with extended timeout
       await waitFor(
         () => {
           const stored = localStorage.getItem("draft_ops");
@@ -284,16 +275,12 @@ describe("Step2Form", () => {
 
     it("handles back navigation on Back button click", async () => {
       const user = userEvent.setup();
-      const mockNavigate = vi.fn();
 
       // We need to test that the history.back() would be called
       render(<Step2Form />);
 
       const backButton = screen.getByText("Back");
       await user.click(backButton);
-
-      // The component calls router.history.back()
-      // We would verify this was called in the mock
     });
   });
 
@@ -309,24 +296,15 @@ describe("Step2Form", () => {
         }),
       );
 
-      const { rerender } = render(<Step2Form />);
-
       await waitFor(() => {
         expect(screen.getByText("Submit")).not.toBeDisabled();
       });
 
       const submitButton = screen.getByText("Submit");
       await user.click(submitButton);
-
-      // Verify submit was triggered (would show loading state)
-      // In real scenario, API calls would be made
     });
 
     it("shows loading state during submission", async () => {
-      // This test verifies the loading state is shown during async submission
-      // The button should be disabled and show loading indicator
-      const user = userEvent.setup();
-
       localStorage.setItem(
         "draft_ops",
         JSON.stringify({
@@ -344,16 +322,12 @@ describe("Step2Form", () => {
 
       const submitButton = screen.getByText("Submit");
 
-      // Check initial state
       expect(submitButton).not.toHaveAttribute("disabled");
-
-      // Note: Full loading state testing would require mocking async operations
     });
   });
 
   describe("Error Message Display", () => {
     it("displays error for empty employment type after blur", async () => {
-      const user = userEvent.setup({ delay: null });
       render(<Step2Form />);
 
       const employmentTypeSelect = screen.getAllByRole("combobox")[0];
@@ -381,21 +355,19 @@ describe("Step2Form", () => {
       });
       await user.click(screen.getByText("Full-time"));
 
-      // Verify no error after selection
-      expect(employmentTypeSelect).toHaveValue("full-time");
+      expect(employmentTypeSelect).toHaveValue("Full-time");
     });
   });
 
   describe("Optional Fields", () => {
     it("Notes field is optional and does not block submission", async () => {
-      const user = userEvent.setup();
       localStorage.setItem(
         "draft_ops",
         JSON.stringify({
           photo: "data:image/png;base64,test",
           employmentType: "full-time",
           officeLocation: { id: 1, name: "New York" },
-          notes: "", // Empty notes
+          notes: "",
         }),
       );
 
@@ -444,9 +416,8 @@ describe("Step2Form", () => {
         await user.click(screen.getByText(employmentType));
 
         await waitFor(() => {
-          expect(employmentTypeSelect).toHaveValue(
-            employmentType.toLowerCase().replace("-", "-"),
-          );
+          // Select input displays the label (e.g., "Full-time"), not the value
+          expect(employmentTypeSelect).toHaveValue(employmentType);
         });
 
         unmount();
@@ -456,7 +427,6 @@ describe("Step2Form", () => {
 
   describe("Syncing Status", () => {
     it("reflects isSyncing state in Submit button", async () => {
-      const user = userEvent.setup();
       localStorage.setItem(
         "draft_ops",
         JSON.stringify({
@@ -468,12 +438,10 @@ describe("Step2Form", () => {
 
       render(<Step2Form />);
 
-      // Wait for form to be ready
       await waitFor(() => {
         expect(screen.getByText("Submit")).not.toBeDisabled();
       });
 
-      // The button should show initial state (not loading)
       const submitButton = screen.getByText("Submit");
       expect(submitButton).not.toHaveAttribute("disabled");
     });

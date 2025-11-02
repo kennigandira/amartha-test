@@ -2,7 +2,7 @@ import { Button, ButtonVariant } from "../Button";
 import { Select } from "../Select";
 import { TextArea } from "../TextArea";
 import { FileInput } from "../FileInput";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Autocomplete } from "../Autocomplete";
 import { useForm, type ValidationSchema } from "@/hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
@@ -116,6 +116,20 @@ export const Step2Form = () => {
     [],
   );
 
+  const errorMessages = useMemo(() => {
+    return {
+      photo: touched.photo && errors.photo ? errors.photo : undefined,
+      employmentType:
+        touched.employmentType && errors.employmentType
+          ? errors.employmentType
+          : undefined,
+      officeLocation:
+        touched.officeLocation && errors.officeLocation
+          ? errors.officeLocation
+          : undefined,
+    };
+  }, [errors, touched]);
+
   return (
     <>
       <div className={classes.container}>
@@ -136,12 +150,16 @@ export const Step2Form = () => {
         value={formData?.photo}
         placeholder={TEXTS.UPLOAD_PHOTO}
         onChange={handleFileChange}
+        onBlur={() => handleBlur("photo")}
+        errorMessage={errorMessages.photo}
       />
       <Select
         name="employmentType"
         options={EMPLOYMENT_TYPE_OPTIONS}
         value={formData?.employmentType}
         onChange={handleEmploymentTypeChange}
+        onBlur={() => handleBlur("employmentType")}
+        errorMessage={errorMessages.employmentType}
       />
       <Autocomplete
         name="officeLocation"
@@ -150,11 +168,7 @@ export const Step2Form = () => {
         onOptionSelect={handleOfficeLocationSelect}
         value={formData?.officeLocation?.name || ""}
         onBlur={() => handleBlur("officeLocation")}
-        errorMessage={
-          touched.officeLocation && errors.officeLocation
-            ? errors.officeLocation
-            : undefined
-        }
+        errorMessage={errorMessages.officeLocation}
       />
       <TextArea
         name="notes"
