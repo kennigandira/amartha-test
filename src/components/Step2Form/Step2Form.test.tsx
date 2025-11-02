@@ -10,6 +10,7 @@ vi.mock("../Autocomplete/use-autocomplete-search", () => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  useNavigate: vi.fn(() => vi.fn()),
   useRouter: () => ({
     navigate: vi.fn(),
     history: {
@@ -64,7 +65,7 @@ describe("Step2Form", () => {
 
       expect(screen.getByPlaceholderText("Upload Photo")).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("Search Office Location...")
+        screen.getByPlaceholderText("Search Office Location..."),
       ).toBeInTheDocument();
       expect(screen.getByPlaceholderText("Notes")).toBeInTheDocument();
     });
@@ -111,9 +112,12 @@ describe("Step2Form", () => {
       const photoInput = screen.getByPlaceholderText("Upload Photo");
       fireEvent.blur(photoInput);
 
-      await waitFor(() => {
-        expect(screen.queryByText(/Photo is required/i)).toBeInTheDocument();
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(screen.queryByText(/Photo is required/i)).toBeInTheDocument();
+        },
+        { timeout: 2000 },
+      );
     });
 
     it("does not validate Notes field (optional)", async () => {
@@ -162,7 +166,7 @@ describe("Step2Form", () => {
       render(<Step2Form />);
 
       const notesInput = screen.getByPlaceholderText(
-        "Notes"
+        "Notes",
       ) as HTMLTextAreaElement;
       await user.type(notesInput, "Test note content");
 
@@ -195,7 +199,7 @@ describe("Step2Form", () => {
       render(<Step2Form />);
 
       const officeLocationInput = screen.getByPlaceholderText(
-        "Search Office Location..."
+        "Search Office Location...",
       );
       await user.type(officeLocationInput, "New York");
 
@@ -226,7 +230,7 @@ describe("Step2Form", () => {
           const stored = localStorage.getItem("draft_ops");
           expect(stored).toBeTruthy();
         },
-        { timeout: 4000 }
+        { timeout: 4000 },
       );
     });
 
@@ -261,7 +265,7 @@ describe("Step2Form", () => {
       render(<Step2Form />);
 
       expect(screen.getByPlaceholderText("Notes")).toHaveValue(
-        "Part-time employee"
+        "Part-time employee",
       );
     });
   });
@@ -302,7 +306,7 @@ describe("Step2Form", () => {
           photo: "data:image/png;base64,test",
           employmentType: "full-time",
           officeLocation: { id: 1, name: "New York" },
-        })
+        }),
       );
 
       const { rerender } = render(<Step2Form />);
@@ -329,7 +333,7 @@ describe("Step2Form", () => {
           photo: "data:image/png;base64,test",
           employmentType: "full-time",
           officeLocation: { id: 1, name: "New York" },
-        })
+        }),
       );
 
       render(<Step2Form />);
@@ -355,11 +359,14 @@ describe("Step2Form", () => {
       const employmentTypeSelect = screen.getAllByRole("combobox")[0];
       fireEvent.blur(employmentTypeSelect);
 
-      await waitFor(() => {
-        expect(
-          screen.queryByText(/Employmenttype is required/i)
-        ).toBeInTheDocument();
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(
+            screen.queryByText(/Employmenttype is required/i),
+          ).toBeInTheDocument();
+        },
+        { timeout: 2000 },
+      );
     });
 
     it("clears error when employment type is selected", async () => {
@@ -389,7 +396,7 @@ describe("Step2Form", () => {
           employmentType: "full-time",
           officeLocation: { id: 1, name: "New York" },
           notes: "", // Empty notes
-        })
+        }),
       );
 
       render(<Step2Form />);
@@ -438,7 +445,7 @@ describe("Step2Form", () => {
 
         await waitFor(() => {
           expect(employmentTypeSelect).toHaveValue(
-            employmentType.toLowerCase().replace("-", "-")
+            employmentType.toLowerCase().replace("-", "-"),
           );
         });
 
@@ -456,7 +463,7 @@ describe("Step2Form", () => {
           photo: "data:image/png;base64,test",
           employmentType: "full-time",
           officeLocation: { id: 1, name: "New York" },
-        })
+        }),
       );
 
       render(<Step2Form />);
