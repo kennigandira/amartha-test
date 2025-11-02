@@ -296,6 +296,8 @@ describe("Step2Form", () => {
         }),
       );
 
+      render(<Step2Form />);
+
       await waitFor(() => {
         expect(screen.getByText("Submit")).not.toBeDisabled();
       });

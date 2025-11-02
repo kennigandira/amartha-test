@@ -137,9 +137,7 @@ export const Step2Form = () => {
         placeholder={TEXTS.UPLOAD_PHOTO}
         onChange={handleFileChange}
         onBlur={() => handleBlur("photo")}
-        errorMessage={
-          touched.photo && errors.photo ? errors.photo : undefined
-        }
+        errorMessage={touched.photo && errors.photo ? errors.photo : undefined}
       />
       <Select
         name="employmentType"
