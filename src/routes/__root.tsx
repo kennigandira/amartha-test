@@ -4,7 +4,7 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 export const Route = createRootRoute({
   component: () => (
     <>
-      <div className="relative h-screen flex items-center justify-center bg-zinc-100">
+      <div className="relative flex items-center justify-center bg-zinc-100 min-h-screen">
         <Outlet />
       </div>
 
