@@ -1,6 +1,4 @@
-# Amartha Test - Employee Management Wizard
-
-[![Unit Tests](https://github.com/YOUR_USERNAME/amartha-test/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/amartha-test/actions/workflows/test.yml)
+# Employee Management Wizard
 
 A modern employee management application built with React, TypeScript, and Vite. Features a multi-step wizard for adding employees with draft persistence and a team dashboard.
 
