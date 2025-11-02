@@ -3,10 +3,10 @@ import { Select } from "../Select";
 import { TextArea } from "../TextArea";
 import { FileInput } from "../FileInput";
 import { useCallback } from "react";
-import { LinkButton } from "../LinkButton";
 import { Autocomplete } from "../Autocomplete";
 import { useForm, type ValidationSchema } from "@/hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
+import { useCanGoBack, useRouter } from "@tanstack/react-router";
 
 export interface OfficeLocation {
   id: number;
@@ -33,21 +33,21 @@ export interface Details {
 export type EmploymentType =
   (typeof EmploymentType)[keyof typeof EmploymentType];
 
-const EMPLOYMENT_TYPE_OPTIONS: { children: string; value: EmploymentType }[] = [
+const EMPLOYMENT_TYPE_OPTIONS: { label: string; value: EmploymentType }[] = [
   {
-    children: "Full-time",
+    label: "Full-time",
     value: EmploymentType.FULL_TIME,
   },
   {
-    children: "Part-time",
+    label: "Part-time",
     value: EmploymentType.PART_TIME,
   },
   {
-    children: "Contract",
+    label: "Contract",
     value: EmploymentType.CONTRACT,
   },
   {
-    children: "Intern",
+    label: "Intern",
     value: EmploymentType.INTERN,
   },
 ];
@@ -66,8 +66,7 @@ const OPS_VALIDATION_SCHEMA: ValidationSchema = {
     validate: (value) => !!value,
   },
   notes: {
-    required: true,
-    validate: (value) => !!value?.trim(),
+    required: false,
   },
 };
 
@@ -86,17 +85,18 @@ export const Step2Form = () => {
     isSyncing,
     handleClearDraft,
     handleSubmit,
+    handleChangeFormData,
   } = useForm<Details>(LS_OPS_FORM_KEY, OPS_VALIDATION_SCHEMA);
 
-  const handleEmploymentTypeChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setFormData((prev) => ({
-        ...prev,
-        employmentType: e.target.value as EmploymentType,
-      }));
-    },
-    [],
-  );
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+
+  const handleEmploymentTypeChange = useCallback((value: string | number) => {
+    handleChangeFormData({
+      name: "employmentType",
+      value: value,
+    });
+  }, []);
 
   const handleFileChange = useCallback((file: string | null) => {
     setFormData((prev) => ({
@@ -106,24 +106,30 @@ export const Step2Form = () => {
     validateAndTouch("photo", file || undefined);
   }, []);
 
-  const handleOfficeLocationSelect = (option: OfficeLocation | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      officeLocation: option || undefined,
-    }));
-    validateAndTouch("officeLocation", option || undefined);
-  };
+  const handleOfficeLocationSelect = useCallback(
+    (option: OfficeLocation | null) => {
+      setFormData((prev) => ({
+        ...prev,
+        officeLocation: option || undefined,
+      }));
+      validateAndTouch("officeLocation", option || undefined);
+    },
+    [],
+  );
 
   return (
     <>
       <div className="relative">
-        <LinkButton
-          className="absolute left-0"
-          to="/wizard"
-          search={{ role: "admin" }}
-        >
-          Back
-        </LinkButton>
+        {canGoBack ? (
+          <Button
+            type="button"
+            className="absolute left-0"
+            onClick={() => router.history.back()}
+          >
+            Back
+          </Button>
+        ) : null}
+
         <h2 className="text-2xl font-bold mb-5">Details</h2>
       </div>
       <FileInput

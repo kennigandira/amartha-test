@@ -58,8 +58,9 @@ export const FileInput = ({
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        // setPreviewUrl(reader.result as string);
-        onChange?.(reader.result as string);
+        if (typeof reader.result === "string") {
+          onChange?.(reader.result);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -108,8 +109,7 @@ export const FileInput = ({
           onClick={handleBrowseClick}
           disabled={disabled}
           className={cn(
-            "px-4 py-2 rounded-lg border border-zinc-500 bg-white hover:bg-zinc-50 transition-colors font-medium",
-            { "cursor-pointer opacity-50": disabled },
+            "cursor-pointer px-4 py-2 rounded-lg border border-zinc-500 bg-white hover:bg-zinc-50 transition-colors font-medium",
           )}
         >
           Upload Photo

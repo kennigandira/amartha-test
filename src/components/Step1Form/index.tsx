@@ -3,33 +3,29 @@ import { Select } from "../Select";
 import { Button, ButtonVariant } from "../Button";
 import { Autocomplete } from "../Autocomplete";
 import { useCallback } from "react";
-import { Role } from "@/constants/role";
 import { LinkButton } from "../LinkButton";
 import { useForm, type ValidationSchema } from "../../hooks/use-form";
 import { DRAFT_KEYS } from "@/constants/draft";
-import {
-  useBasicInfo,
-  type BasicInfo,
-  type Department,
-} from "./use-basic-info";
+import { Role, type BasicInfo, type Department } from "@/api/basicInfo";
+import { useBasicInfo } from "./use-basic-info";
 
 const DEPARTMENTS_ENDPOINT = `${import.meta.env.VITE_BASIC_INFO_SERVICE_PORT}/departments`;
 
-const ROLE_OPTIONS: { children: string; value: Role }[] = [
+const ROLE_OPTIONS: { label: string; value: Role }[] = [
   {
-    children: "Ops",
+    label: "Ops",
     value: Role.OPS,
   },
   {
-    children: "Admin",
+    label: "Admin",
     value: Role.ADMIN,
   },
   {
-    children: "Engineer",
+    label: "Engineer",
     value: Role.ENGINEER,
   },
   {
-    children: "Finance",
+    label: "Finance",
     value: Role.FINANCE,
   },
 ];
@@ -49,7 +45,7 @@ const ADMIN_VALIDATION_SCHEMA: ValidationSchema = {
   },
   department: {
     required: true,
-    validate: (value) => !!value && value.id !== 0,
+    validate: (value) => !!value,
   },
   employeeId: {
     required: true,
@@ -83,13 +79,14 @@ export const Step1Form = () => {
       : "";
 
     const employeesInDepartment = option
-      ? basicInfo.filter((employee) => employee.department.id === option?.id)
+      ? basicInfo.filter((employee) => employee.department?.id === option?.id)
       : [];
     const nextEmployeeNumber = employeesInDepartment.length + 1;
     const employeeId = option
       ? `${departmentCode}-${nextEmployeeNumber.toString().padStart(3, "0")}`
       : "";
-    setFormData((prev) => ({
+
+    setFormData((prev: BasicInfo) => ({
       ...prev,
       department: option || undefined,
       employeeId,
@@ -98,15 +95,13 @@ export const Step1Form = () => {
   };
 
   const handleRoleChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    (value: string | number) => {
       handleChangeFormData({
         name: "role",
         value: value,
       });
-      validateAndTouch("role", value);
     },
-    [handleChangeFormData, validateAndTouch],
+    [handleChangeFormData],
   );
 
   return (
@@ -139,7 +134,7 @@ export const Step1Form = () => {
         placeholder="Search department..."
         endpoint={DEPARTMENTS_ENDPOINT}
         onOptionSelect={handleDepartmentSelect}
-        value={formData?.department?.name || ""}
+        value={formData?.department?.name}
         onBlur={() => handleBlur("department")}
         errorMessage={
           touched.department && errors.department
@@ -150,7 +145,7 @@ export const Step1Form = () => {
       <Select
         name="role"
         options={ROLE_OPTIONS}
-        value={formData?.role || ""}
+        value={formData?.role}
         onChange={handleRoleChange}
         onBlur={() => handleBlur("role")}
         errorMessage={touched.role && errors.role ? errors.role : undefined}
@@ -160,7 +155,7 @@ export const Step1Form = () => {
         name="employeeId"
         disabled
         type="text"
-        value={formData?.employeeId || ""}
+        value={formData?.employeeId}
         errorMessage={
           touched.employeeId && errors.employeeId
             ? errors.employeeId
