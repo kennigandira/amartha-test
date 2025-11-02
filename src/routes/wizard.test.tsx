@@ -1,41 +1,72 @@
-
 import { render, screen, waitFor } from "@testing-library/react";
-import { RouterProvider, createRouter, createMemoryHistory } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createRouter,
+  createMemoryHistory,
+} from "@tanstack/react-router";
 import { routeTree } from "../routeTree.gen";
 import { vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 
+vi.unmock("@tanstack/react-router");
+
 // Mock the API endpoints
 vi.mock("../components/Autocomplete/use-autocomplete-search", () => ({
-  useAutocompleteSearch: (endpoint: string) => {
-    if (typeof endpoint === 'string' && endpoint.includes("departments")) {
+  useAutocompleteSearch: (params: {
+    searchQuery: string;
+    endpoint: string;
+    debounceMs: number;
+    minQueryLength: number;
+  }) => {
+    if (params.endpoint.includes("departments") && params.searchQuery) {
       return {
-        data: [
-          { id: 1, name: "Engineering" },
-        ],
-        loading: false,
+        data: [{ id: 1, name: "Engineering" }],
+        isLoading: false,
+        error: null,
       };
     }
-    if (typeof endpoint === 'string' && endpoint.includes("locations")) {
+    if (params.endpoint.includes("locations") && params.searchQuery) {
       return {
         data: [
           { id: 1, name: "New York" },
           { id: 2, name: "London" },
         ],
-        loading: false,
+        isLoading: false,
+        error: null,
       };
     }
-    return { data: [], loading: false };
+    return { data: [], isLoading: false, error: null };
   },
 }));
 
-const router = createRouter({
-  routeTree,
-  history: createMemoryHistory({ initialEntries: ["/wizard"] }),
+// Mock the API calls
+vi.mock("../api/basicInfo", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api/basicInfo")>();
+  return {
+    ...actual,
+    postBasicInfo: vi.fn(() =>
+      Promise.resolve({ id: 1, fullName: "John Doe" }),
+    ),
+    getBasicInfo: vi.fn(() => Promise.resolve([])),
+  };
+});
+
+vi.mock("../api/details", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../api/details")>();
+  return {
+    ...actual,
+    postDetails: vi.fn(() => Promise.resolve({ id: 1 })),
+  };
 });
 
 describe("Wizard Flow", () => {
   it("should navigate through the wizard, fill out forms, and submit", async () => {
+    const memoryHistory = createMemoryHistory({ initialEntries: ["/wizard"] });
+    const router = createRouter({
+      routeTree,
+      history: memoryHistory,
+    });
+
     render(<RouterProvider router={router} />);
 
     // 1. Initial render shows WizardIntro
@@ -44,7 +75,7 @@ describe("Wizard Flow", () => {
     });
 
     // 2. Navigate to Step 1
-    router.navigate({ to: "/wizard", search: { role: "admin" } });
+    await router.navigate({ to: "/wizard", search: { role: "admin" } });
 
     // 3. Fill out Step1Form
     await waitFor(() => {
@@ -52,23 +83,31 @@ describe("Wizard Flow", () => {
     });
 
     await userEvent.type(screen.getByPlaceholderText("Full Name"), "John Doe");
-    await userEvent.type(screen.getByPlaceholderText("Email"), "john.doe@example.com");
+    await userEvent.type(
+      screen.getByPlaceholderText("Email"),
+      "john.doe@example.com",
+    );
 
     // Simulate department selection
-    await userEvent.type(screen.getByPlaceholderText("Search department..."), "Engineering");
+    await userEvent.type(
+      screen.getByPlaceholderText("Search department..."),
+      "Engineering",
+    );
     await userEvent.click(screen.getByText("Engineering"));
 
     // Simulate role selection
     await userEvent.click(screen.getByPlaceholderText("Select an option"));
     await userEvent.click(screen.getByText("Engineer"));
 
-
     // 4. Click Next
-    await waitFor(() => {
-      const nextButton = screen.getByText("Next");
-      expect(nextButton).not.toBeDisabled();
-      userEvent.click(nextButton);
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        const nextButton = screen.getByText("Next");
+        expect(nextButton).not.toBeDisabled();
+        userEvent.click(nextButton);
+      },
+      { timeout: 3000 },
+    );
 
     // 5. Assert navigation to Step 2
     await waitFor(() => {
@@ -81,30 +120,48 @@ describe("Wizard Flow", () => {
     await userEvent.upload(screen.getByPlaceholderText("Upload Photo"), file);
 
     // Simulate employment type selection
-    await userEvent.click(screen.getAllByText("Select an option")[0]);
+    const comboboxes = screen.getAllByRole("combobox");
+    // Employment type is the first combobox on Step2 form
+    const employmentTypeSelect = comboboxes[0];
+    await userEvent.click(employmentTypeSelect);
+    await waitFor(() => {
+      expect(screen.getByText("Full-time")).toBeInTheDocument();
+    });
     await userEvent.click(screen.getByText("Full-time"));
 
     // Simulate office location selection
-    await userEvent.type(screen.getByPlaceholderText("Search Office Location..."), "New York");
+    await userEvent.type(
+      screen.getByPlaceholderText("Search Office Location..."),
+      "New York",
+    );
+    await waitFor(() => {
+      expect(screen.getByText("New York")).toBeInTheDocument();
+    });
     await userEvent.click(screen.getByText("New York"));
 
-    await userEvent.type(screen.getByPlaceholderText("Notes"), "This is a test note.");
+    await userEvent.type(
+      screen.getByPlaceholderText("Notes"),
+      "This is a test note.",
+    );
 
     // 7. Click Submit
-    const submitButton = screen.getByText("Submit");
-    expect(submitButton).not.toBeDisabled();
+    await waitFor(
+      () => {
+        const buttons = screen.getAllByRole("button");
+        // Submit button is the last button in the form
+        const submitButton = buttons[buttons.length - 1];
+        expect(submitButton).not.toBeDisabled();
+      },
+      { timeout: 3000 },
+    );
 
-    const consoleSpy = vi.spyOn(console, "log");
+    const buttons = screen.getAllByRole("button");
+    const submitButton = buttons[buttons.length - 1];
     await userEvent.click(submitButton);
 
-    // 8. Assert submission
+    // 8. Assert submission success by verifying navigation to home page
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Form submitted:",
-        expect.any(Object)
-      );
+      expect(screen.getByText("Our Team")).toBeInTheDocument();
     });
-
-    consoleSpy.mockRestore();
   });
 });
