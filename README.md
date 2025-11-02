@@ -37,7 +37,7 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/kennigandira/amartha-test.git
+   git clone <repository-url>
    cd amartha-test
    ```
 
@@ -64,6 +64,58 @@ Before you begin, ensure you have the following installed:
    ```
    VITE_BASIC_INFO_SERVICE_PORT=http://localhost:4001
    VITE_DETAILS_SERVICE_PORT=http://localhost:4002
+   ```
+
+4. **Start the JSON servers (in separate terminal windows)**
+
+   The application requires two JSON servers for basic employee info and employee details.
+
+   **Option A: Using npm scripts (recommended)**
+
+   Terminal 1:
+
+   ```bash
+   npm run server:step1
+   ```
+
+   Terminal 2:
+
+   ```bash
+   npm run server:step2
+   ```
+
+   **Option B: Manual commands**
+
+   Terminal 1 - Basic Info Service:
+
+   ```bash
+   npx json-server@0.17.4 --host 0.0.0.0 --port 4001 --watch db_step1.json
+   ```
+
+   Terminal 2 - Employee Details Service:
+
+   ```bash
+   npx json-server@0.17.4 --host 0.0.0.0 --port 4002 --watch db_step2.json
+   ```
+
+   **Option C: Run both servers in one terminal**
+
+   ```bash
+   npm run servers
+   ```
+
+5. **Start the development server (in another terminal window)**
+
+   ```bash
+   npm run dev
+   ```
+
+   The application will be available at `http://localhost:5173` (default Vite port)
+
+   **Tip:** Or run everything at once with:
+
+   ```bash
+   npm run dev:full
    ```
 
 ### Docker Setup
@@ -120,14 +172,18 @@ Locally preview the production build.
 
 ## Available Scripts
 
-| Script               | Description                                                          |
-| -------------------- | -------------------------------------------------------------------- |
-| `npm run dev`        | Starts the Vite development server with hot module replacement (HMR) |
-| `npm run build`      | Creates an optimized production build in the `/dist` folder          |
-| `npm run lint`       | Runs ESLint to check for code quality issues                         |
-| `npm run preview`    | Previews the production build locally                                |
-| `npm test`           | Runs unit tests in watch mode                                        |
-| `npm run test:watch` | Runs unit tests in interactive watch mode                            |
+| Script                 | Description                                                          |
+| ---------------------- | -------------------------------------------------------------------- |
+| `npm run dev`          | Starts the Vite development server with hot module replacement (HMR) |
+| `npm run build`        | Creates an optimized production build in the `/dist` folder          |
+| `npm run lint`         | Runs ESLint to check for code quality issues                         |
+| `npm run preview`      | Previews the production build locally                                |
+| `npm test`             | Runs unit tests in watch mode                                        |
+| `npm run test:watch`   | Runs unit tests in interactive watch mode                            |
+| `npm run server:step1` | Starts JSON server for basic info on port 4001                       |
+| `npm run server:step2` | Starts JSON server for employee details on port 4002                 |
+| `npm run servers`      | Starts both JSON servers concurrently                                |
+| `npm run dev:full`     | Starts dev server and both JSON servers concurrently                 |
 
 ## Project Structure
 
