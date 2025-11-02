@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { getDetails, getDetailsCount } from "@/api/details";
+import {
+  getDetails,
+  getDetailsCount,
+  type OfficeLocation,
+  type Details,
+} from "@/api/details";
 import { getBasicInfo, Role, type Department } from "@/api/basicInfo";
-import type { OfficeLocation } from "@/components/Step2Form";
 
 export interface EmployeeDetails {
   id?: number;
@@ -28,6 +32,54 @@ export function useEmployees(page = 1, limit = 10) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
+
+  const extractEmployeeIds = (details: Details[]): string[] => {
+    return details
+      .map((detail) => detail.employeeId)
+      .filter((id): id is string => !!id);
+  };
+
+  const fetchAndUpdateEmployeeBasicInfo = async (
+    employeeId: string,
+  ): Promise<void> => {
+    try {
+      const basicInfo = await getBasicInfo({
+        query: { employeeId },
+        returnAll: true,
+      });
+
+      const basicInfoData = Array.isArray(basicInfo) ? basicInfo[0] : basicInfo;
+
+      if (!basicInfoData) return;
+
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          emp.employeeId?.toLowerCase() === employeeId.toLowerCase()
+            ? {
+                ...emp,
+                email: basicInfoData.email,
+                fullName: basicInfoData.fullName,
+                department: basicInfoData.department,
+                role: basicInfoData.role,
+              }
+            : emp,
+        ),
+      );
+    } catch (err) {
+      console.warn(
+        `Failed to fetch basicInfo for employeeId: ${employeeId}`,
+        err,
+      );
+    }
+  };
+
+  const enrichEmployeesWithBasicInfo = async (
+    employeeIds: string[],
+  ): Promise<void> => {
+    if (employeeIds.length === 0) return;
+
+    await Promise.all(employeeIds.map(fetchAndUpdateEmployeeBasicInfo));
+  };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -57,6 +109,7 @@ export function useEmployees(page = 1, limit = 10) {
         setIsLoading(false);
         return;
       }
+
       const partialEmployees: MergedEmployee[] = detailsArray.map((detail) => ({
         employeeId: detail.employeeId,
         employmentType: detail.employmentType,
@@ -72,46 +125,8 @@ export function useEmployees(page = 1, limit = 10) {
       setEmployees(partialEmployees);
 
       try {
-        const employeeIds = detailsArray
-          .map((detail) => detail.employeeId)
-          .filter((id): id is string => !!id);
-
-        if (employeeIds.length > 0) {
-          await Promise.all(
-            employeeIds.map(async (id) => {
-              try {
-                const basicInfo = await getBasicInfo({
-                  query: { employeeId: id },
-                  returnAll: true,
-                });
-                const basicInfoData = Array.isArray(basicInfo)
-                  ? basicInfo[0]
-                  : basicInfo;
-
-                if (basicInfoData) {
-                  setEmployees((prev) =>
-                    prev.map((emp) =>
-                      emp.employeeId?.toLowerCase() === id.toLowerCase()
-                        ? {
-                            ...emp,
-                            email: basicInfoData.email,
-                            fullName: basicInfoData.fullName,
-                            department: basicInfoData.department,
-                            role: basicInfoData.role,
-                          }
-                        : emp,
-                    ),
-                  );
-                }
-              } catch (individualError) {
-                console.warn(
-                  `Failed to fetch basicInfo for employeeId: ${id}`,
-                  individualError,
-                );
-              }
-            }),
-          );
-        }
+        const employeeIds = extractEmployeeIds(detailsArray);
+        await enrichEmployeesWithBasicInfo(employeeIds);
       } catch (basicInfoError) {
         console.error(
           "Failed to fetch basicInfo, showing details only:",
