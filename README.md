@@ -1,16 +1,16 @@
 # Amartha Test - Employee Management Wizard
 
+[![Unit Tests](https://github.com/YOUR_USERNAME/amartha-test/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/amartha-test/actions/workflows/test.yml)
+
 A modern employee management application built with React, TypeScript, and Vite. Features a multi-step wizard for adding employees with draft persistence and a team dashboard.
 
 ## Features
 
-- Multi-step employee wizard with form validation
-- Real-time draft persistence using localStorage
-- Team member dashboard with photo display
-- File upload for employee photos
-- Responsive design with Tailwind CSS v4
-- Type-safe routing with TanStack Router
-- Dark mode support with next-themes
+- **Multi-step employee wizard** with form validation across Admin and Ops workflows
+- **Real-time draft persistence** using localStorage to prevent data loss
+- **Team member dashboard** with pagination and employee photo display
+- **Type-safe routing** with TanStack Router
+- **Docker support** for seamless development and deployment
 
 ## Tech Stack
 
@@ -26,15 +26,18 @@ A modern employee management application built with React, TypeScript, and Vite.
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js:** v14 or higher (recommended: v18+)
+- **Node.js:** v20
 - **npm:** v7+ (comes with Node.js) or **pnpm**
+- **Docker & Docker Compose** (optional, for containerized development)
 
-## Installation
+## Setup & Installation
+
+### Local Development (Without Docker)
 
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/kennigandira/amartha-test.git
    cd amartha-test
    ```
 
@@ -50,24 +53,83 @@ Before you begin, ensure you have the following installed:
    pnpm install
    ```
 
-3. **Start the development server**
+3. **Configure environment variables**
 
    ```bash
-   npm run dev
+   cp env.example .env.local
    ```
 
-   The application will be available at `http://localhost:5173` (default Vite port)
+   Update `.env.local` with your API endpoints (if using local JSON servers):
+
+   ```
+   VITE_BASIC_INFO_SERVICE_PORT=http://localhost:4001
+   VITE_DETAILS_SERVICE_PORT=http://localhost:4002
+   ```
+
+### Docker Setup
+
+The project includes Docker and Docker Compose configuration for containerized development:
+
+**Docker Configuration:**
+
+- **Dockerfile:** Uses Node 20 Alpine for a lightweight image, runs Vite dev server on port 3000
+- **docker-compose.yml:** Orchestrates three services:
+  - `webapp` - React application (port 3000)
+  - `db-step1` - JSON Server for basic employee info (port 4001)
+  - `db-step2` - JSON Server for employee details (port 4002)
+
+**Start all services with Docker Compose:**
+
+```bash
+docker-compose up
+```
+
+The application will be available at `http://localhost:3000`, with API services running on ports 4001 and 4002.
+
+**Stop services:**
+
+```bash
+docker-compose down
+```
+
+## Development & Build
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173` (default Vite port)
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+Creates an optimized production build in the `/dist` folder.
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+Locally preview the production build.
 
 ## Available Scripts
 
-| Script            | Description                                                          |
-| ----------------- | -------------------------------------------------------------------- |
-| `npm run dev`     | Starts the Vite development server with hot module replacement (HMR) |
-| `npm run build`   | Creates an optimized production build in the `/dist` folder          |
-| `npm run lint`    | Runs ESLint to check for code quality issues                         |
-| `npm run preview` | Previews the production build locally                                |
+| Script               | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| `npm run dev`        | Starts the Vite development server with hot module replacement (HMR) |
+| `npm run build`      | Creates an optimized production build in the `/dist` folder          |
+| `npm run lint`       | Runs ESLint to check for code quality issues                         |
+| `npm run preview`    | Previews the production build locally                                |
+| `npm test`           | Runs unit tests in watch mode                                        |
+| `npm run test:watch` | Runs unit tests in interactive watch mode                            |
 
-## Development Guide
+## Project Structure
 
 ### Path Aliases
 
@@ -91,16 +153,14 @@ This project uses **TanStack Router** with file-based routing:
 
 **Available Routes:**
 
-- `/` - Home page (team listing)
-- `/wizard` - Employee wizard
+- `/` - Home page (team listing with pagination)
+- `/wizard` - Employee wizard (multi-step form)
 
 ### Styling
 
 The project uses **Tailwind CSS v4** with the Vite plugin:
 
 - Utility-first CSS framework
-- Dark mode support via `next-themes`
-- Component variants managed with `class-variance-authority`
 - Use the `cn()` utility from `@/lib/utils` to merge Tailwind classes
 
 Example:
@@ -135,20 +195,6 @@ import { cn } from '@/lib/utils'
 
 - Code formatting configuration (uses Prettier defaults)
 
-## Building for Production
-
-To create a production build:
-
-```bash
-npm run build
-```
-
-The optimized files will be in the `/dist` directory. To preview the production build locally:
-
-```bash
-npm run preview
-```
-
 ## Code Quality
 
 The project includes:
@@ -163,13 +209,23 @@ Run linting before committing:
 npm run lint
 ```
 
+## Building for Production
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+The optimized files will be in the `/dist` directory. To preview the production build locally:
+
+```bash
+npm run preview
+```
+
 ## Contributing
 
 1. Follow the existing code style and formatting
 2. Run `npm run lint` before committing
 3. Ensure TypeScript types are properly defined
 4. Test your changes in both light and dark modes
-
-## License
-
-[Add your license information here]
